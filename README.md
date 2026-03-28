@@ -248,7 +248,7 @@ covibe sync status
 | 经验记录 | `"Redis 连接池不超过 50"` | 否，只有结论 |
 | 冲突警告 | `"bob 也在编辑 Header.tsx"` | 否 |
 
-**底线：即使 sync server 被完全窃听，攻击者也只能看到谁在改什么文件，看不到任何��码内容。**
+**底线：即使 sync server 被完全窃听，攻击者也只能看到谁在改什么文件，看不到任何代码内容。**
 
 ### 进阶安全（可选配置）
 
@@ -302,7 +302,7 @@ covibe sync start --allow-ips "192.168.1.100,192.168.1.101"
 
 ## 理论基础：Harness Engineering
 
-covibe 不只是一个协作工具——它���立在 **Harness Engineering（工作台工程）** 这套完整的方法论之上。
+covibe 不只是一个协作工具——它建立在 **Harness Engineering（工作台工程）** 这套完整的方法论之上。
 
 > **核心理念**：Harness 不是智能本身，而是释放智能的工具链。同一个 AI 模型，差的 harness 产出平庸结果，好的 harness 产出专家级结果。大多数 AI Agent 失败是 harness 失败，不是模型失败。
 
