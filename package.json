@@ -1,0 +1,34 @@
+{
+  "name": "covibe",
+  "version": "2.0.0",
+  "description": "Co-Vibe — 多人 Vibe Coding 协作工具链。自动探测、团队协作、共享经验板、Agent 智能分工、实时同步。",
+  "type": "module",
+  "bin": {
+    "covibe": "./bin/harness.mjs"
+  },
+  "files": [
+    "bin/",
+    "lib/",
+    "templates/",
+    "scripts/",
+    "skill/",
+    "LICENSE",
+    "README.md"
+  ],
+  "keywords": [
+    "covibe",
+    "vibe-coding",
+    "team-collaboration",
+    "claude-code",
+    "ai-agent",
+    "harness",
+    "CLAUDE.md",
+    "developer-tools",
+    "pair-programming"
+  ],
+  "author": "Clawith Team",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
