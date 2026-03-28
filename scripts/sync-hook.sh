@@ -11,21 +11,27 @@
 
 SYNC_SERVER="${HARNESS_SYNC_SERVER:-http://localhost:3456}"
 SYNC_USER="${HARNESS_SYNC_USER:-$(whoami)}"
+SYNC_TOKEN="${HARNESS_SYNC_TOKEN:-}"
 ACTION="${1:-status}"
 FILE_PATH="${2:-}"
 
+# Token header（如果设置了 token）
+TOKEN_HEADER=""
+if [ -n "$SYNC_TOKEN" ]; then
+  TOKEN_HEADER="-H \"X-Covibe-Token: $SYNC_TOKEN\""
+fi
+
 case "$ACTION" in
   editing)
-    # 广播"我正在编辑这个文件"
     curl -s -X POST "$SYNC_SERVER/broadcast" \
       -H "Content-Type: application/json" \
+      -H "X-Covibe-Token: $SYNC_TOKEN" \
       -d "{\"type\":\"editing\",\"name\":\"$SYNC_USER\",\"file\":\"$FILE_PATH\"}" \
       > /dev/null 2>&1 || true
     ;;
 
   check)
-    # 检查是否有人在编辑同一文件，输出提示
-    RESULT=$(curl -s "$SYNC_SERVER/status" 2>/dev/null || echo '{}')
+    RESULT=$(curl -s -H "X-Covibe-Token: $SYNC_TOKEN" "$SYNC_SERVER/status" 2>/dev/null || echo '{}')
     EDITOR=$(echo "$RESULT" | node -e "
       const d=JSON.parse(require('fs').readFileSync(0,'utf8'));
       const e=d.active_edits?.['$FILE_PATH'];
@@ -37,28 +43,27 @@ case "$ACTION" in
     ;;
 
   decision)
-    # 广播一个决策
     WHAT="${3:-}"
     WHY="${4:-}"
     curl -s -X POST "$SYNC_SERVER/broadcast" \
       -H "Content-Type: application/json" \
+      -H "X-Covibe-Token: $SYNC_TOKEN" \
       -d "{\"type\":\"decision\",\"name\":\"$SYNC_USER\",\"what\":\"$WHAT\",\"why\":\"$WHY\",\"decision_type\":\"human\"}" \
       > /dev/null 2>&1 || true
     ;;
 
   experience)
-    # 广播一条经验
     CONTENT="${3:-}"
     CATEGORY="${4:-general}"
     curl -s -X POST "$SYNC_SERVER/broadcast" \
       -H "Content-Type: application/json" \
+      -H "X-Covibe-Token: $SYNC_TOKEN" \
       -d "{\"type\":\"experience\",\"name\":\"$SYNC_USER\",\"content\":\"$CONTENT\",\"category\":\"$CATEGORY\"}" \
       > /dev/null 2>&1 || true
     ;;
 
   status)
-    # 查看当前团队状态
-    curl -s "$SYNC_SERVER/status" 2>/dev/null | node -e "
+    curl -s -H "X-Covibe-Token: $SYNC_TOKEN" "$SYNC_SERVER/status" 2>/dev/null | node -e "
       const d=JSON.parse(require('fs').readFileSync(0,'utf8'));
       console.log('项目:', d.project, '| 在线:', d.online);
       console.log('成员:', d.members?.join(', ') || '无');
@@ -73,6 +78,7 @@ case "$ACTION" in
   leave)
     curl -s -X POST "$SYNC_SERVER/broadcast" \
       -H "Content-Type: application/json" \
+      -H "X-Covibe-Token: $SYNC_TOKEN" \
       -d "{\"type\":\"left\",\"name\":\"$SYNC_USER\"}" \
       > /dev/null 2>&1 || true
     ;;

@@ -31,6 +31,7 @@ const args = process.argv.slice(2);
 const PORT = parseInt(getArg('--port', '3456'));
 const PROJECT = getArg('--project', 'default');
 const LOG_DIR = getArg('--log-dir', '.teamwork/live');
+const TOKEN = getArg('--token', '');  // 为空则不校验
 
 function getArg(name, defaultVal) {
   const idx = args.indexOf(name);
@@ -261,6 +262,19 @@ function handleMessage(socket, raw) {
 
 // ── HTTP + WebSocket 服务器 ──
 const server = createServer((req, res) => {
+  // Token 校验中间件
+  if (TOKEN) {
+    const authHeader = req.headers['x-covibe-token'] || new URL(req.url, `http://localhost:${PORT}`).searchParams.get('token');
+    if (authHeader !== TOKEN && req.headers.upgrade?.toLowerCase() !== 'websocket') {
+      // REST API 需要 token
+      if (req.url !== '/' && !req.url.startsWith('/?')) {
+        res.writeHead(401, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: '🔒 Token 不对哦～请检查 HARNESS_SYNC_TOKEN' }));
+        return;
+      }
+    }
+  }
+
   // REST API 端点（给 Hook 用 curl 调用）
   if (req.method === 'GET' && req.url === '/status') {
     const members = [...clients.values()].map(c => c.name);
@@ -304,6 +318,17 @@ server.on('upgrade', (req, socket) => {
   if (req.headers.upgrade?.toLowerCase() !== 'websocket') {
     socket.destroy();
     return;
+  }
+
+  // WebSocket 连接时校验 token（通过 URL query）
+  if (TOKEN) {
+    const url = new URL(req.url, `http://localhost:${PORT}`);
+    if (url.searchParams.get('token') !== TOKEN) {
+      socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
+      socket.destroy();
+      console.log('🔒 拒绝了一个无效 token 的连接');
+      return;
+    }
   }
 
   acceptWebSocket(req, socket);
@@ -375,6 +400,6 @@ server.listen(PORT, '0.0.0.0', () => {
 ║    GET  /status     — 在线成员和编辑状态     ║
 ║    GET  /since?ts=  — 获取新消息             ║
 ║    POST /broadcast  — 广播消息（给 Hook 用） ║
-╚══════════════════════════════════════════════╝
+╚═════════════════════════��════════════════════╝
   `);
 });

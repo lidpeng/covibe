@@ -13,35 +13,32 @@ const ROOT = resolve(__dirname, '..');
 const [,, command, ...args] = process.argv;
 
 const HELP = `
-  covibe v2.0.0
-  为 AI Agent 构建结构化工作环境的通用范式
+  🎵 covibe v2.0.0 — Co-Vibe, 一起 vibe coding!
 
   用法:
-    covibe init              自动探测技术栈，一键生成完整 harness
-    covibe audit             审计 harness 健康度（100 分制）
-    covibe team init         初始化团队协作层
-    covibe team onboard      新成员引导
-    covibe sync start        启动实时同步服务器
-    covibe sync status       查看团队同步状态
-    covibe experience add    添加团队经验
-    covibe experience list   查看经验列表
-    covibe coordinate        Agent 智能分工（输出建议）
-    covibe template <type>   输出模板内容
+    covibe init              🔍 自动探测技术栈，一键生成 AI 工作环境
+    covibe audit             📊 审计健康度（100 分制）
+    covibe board             📋 共同任务看板
+    covibe board add "任务"  📌 添加任务到看板
+    covibe board vibe <id>   🎵 开始 vibing 一个任务
+    covibe board done <id>   ✅ 完成任务
+    covibe team init         🤝 初始化团队协作层
+    covibe team onboard      👋 新成员引导
+    covibe sync start        🔗 启动实时同步服务器
+    covibe sync status       👀 查看谁在线、谁在改什么
+    covibe experience add    💡 添加团队经验
+    covibe experience list   📚 查看经验列表
+    covibe coordinate "任务" 🎯 Agent 智能分工
+    covibe template <type>   📄 输出模板内容
 
-  模板类型:
-    claude-md    CLAUDE.md 宪法模板
-    skill        Skill 开发模板
-    hooks        Hooks 模式库
-    workflow     开发工作流模板
-    audit        审计检查清单
-    team         团队协作配置
-    experience   共享经验板
-    coordinator  Agent 分工协调
-    sync         实时同步文档
+  模板: claude-md, skill, hooks, workflow, audit,
+        team, experience, coordinator, sync
 
   选项:
     --help, -h   显示帮助
     --version    显示版本
+
+  Let's vibe together! 🎸
 `;
 
 async function main() {
@@ -64,8 +61,18 @@ async function main() {
         break;
       }
       case 'audit': {
-        const { audit } = await import(resolve(ROOT, 'lib/audit.mjs'));
-        await audit(process.cwd(), args);
+        if (args[0] === '--fix') {
+          const { auditFix } = await import(resolve(ROOT, 'lib/audit.mjs'));
+          await auditFix(process.cwd());
+        } else {
+          const { audit } = await import(resolve(ROOT, 'lib/audit.mjs'));
+          await audit(process.cwd(), args);
+        }
+        break;
+      }
+      case 'cross-ide': {
+        const { crossIde } = await import(resolve(ROOT, 'lib/cross-ide.mjs'));
+        await crossIde(process.cwd(), args);
         break;
       }
       case 'team': {
@@ -74,12 +81,28 @@ async function main() {
         await team(process.cwd(), subCmd, args.slice(1));
         break;
       }
+      case 'board': {
+        const { board } = await import(resolve(ROOT, 'lib/board.mjs'));
+        await board(process.cwd(), args[0], args.slice(1));
+        break;
+      }
       case 'sync': {
         const subCmd = args[0] || 'start';
         if (subCmd === 'start') {
           const { fork } = await import('child_process');
+          const { existsSync: ex, readFileSync: rf } = await import('fs');
           const serverPath = resolve(ROOT, 'scripts/sync-server.mjs');
-          const child = fork(serverPath, args.slice(1), { stdio: 'inherit' });
+          const extraArgs = [...args.slice(1)];
+          // 自动从 harness.team.json 读取 token 和端口
+          const teamCfg = resolve(process.cwd(), '.claude/harness.team.json');
+          if (ex(teamCfg) && !extraArgs.includes('--token')) {
+            try {
+              const cfg = JSON.parse(rf(teamCfg, 'utf8'));
+              if (cfg.sync?.token) extraArgs.push('--token', cfg.sync.token);
+              if (cfg.sync?.port && !extraArgs.includes('--port')) extraArgs.push('--port', String(cfg.sync.port));
+            } catch {}
+          }
+          const child = fork(serverPath, extraArgs, { stdio: 'inherit' });
           child.on('error', e => { console.error('启动失败:', e.message); process.exit(1); });
         } else if (subCmd === 'status') {
           const server = process.env.HARNESS_SYNC_SERVER || 'http://localhost:3456';
@@ -109,6 +132,11 @@ async function main() {
       case 'coordinate': {
         const { coordinate } = await import(resolve(ROOT, 'lib/coordinate.mjs'));
         await coordinate(process.cwd(), args);
+        break;
+      }
+      case 'profile-gen': {
+        const { profileGen } = await import(resolve(ROOT, 'lib/profile-gen.mjs'));
+        await profileGen(process.cwd(), args);
         break;
       }
       case 'template': {

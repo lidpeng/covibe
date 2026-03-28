@@ -18,102 +18,249 @@ npm install -g covibe
 
 ```bash
 cd your-project
-covibe init           # 自动探测技术栈 → 一键生成 CLAUDE.md + 配置
+covibe init           # 自动探测技术栈 → 一键生成完整 AI 工作环境
 covibe audit          # 审计你的 AI 工作环境健康度（100 分制）
 covibe team init      # 开启团队协作模式
-covibe sync start     # 启动实时同步（内网 P2P，无需服务器）
+covibe sync start     # 启动实时同步（内网 P2P）
 ```
 
-## 解决什么��题
+---
 
-**Alice 和 Bob 一起 vibe coding：**
+## 为什么需要 covibe
 
-| 没有 covibe | 有 covibe |
-|-------------|-----------|
-| Alice 让 AI 删了 Z 方块，Bob 不知道又加回来 | Bob 的 AI 自动知道 Alice ��决策，编辑前警告 |
-| 两人同时改同一个文件，合并时冲突 | 实时检测编辑冲突，提前预警 |
-| Bob 踩了个坑，Alice 下周又踩一遍 | 经验板自动记录，下次有人碰到自动提醒 |
-| 新人来了不知道项目规范 | `covibe team onboard` 一键引导 |
-| 每个人的 AI 配置不一样，质量参差不齐 | 团队铁律强制统一，个人偏好自由调整 |
+### 没有 covibe 的世界
 
-## 命令
+Alice（PM）用 Cursor，Bob（开发）用 Claude Code，Charlie（前端）用 Windsurf。三个人在一个项目上 vibe coding：
+
+- Alice 让 AI 删了登录页的手机号验证，Bob 不知道又加回来了
+- Bob 踩了一个 MySQL 大表迁移的坑，花了 3 小时才搞定。下周 Charlie 遇到同样的问题，又花了 3 小时
+- 新来的实习生 David 打开项目，AI 一头雾水，不知道项目规范、不知道怎么跑测试、不知道提交格式
+- Alice 和 Charlie 同时改 Header.tsx，合并时发现冲突，两边的 AI 各自都觉得自己改对了
+
+### 有 covibe 的世界
+
+```
+covibe init           → David 的 AI 瞬间了解整个项目
+covibe team init      → 团队规则自动同步给每个人的 AI
+covibe sync start     → 实时知道谁在改什么文件
+covibe experience add → Bob 的踩坑经验自动提醒 Charlie
+covibe coordinate     → AI 分析谁最适合做什么任务
+```
+
+---
+
+## 真实使用案例
+
+### 案例 1：新人 10 分钟上手
+
+**场景**：David 入职第一天，项目是 FastAPI + React 全栈。
 
 ```bash
-covibe init                    # 自动探测 → 一键初始化
-covibe audit                   # 审计健康度（100 分制）
+# David 运行一条命令
+covibe team onboard
 
-covibe team init               # 初始化团队协作层
-covibe team onboard            # 新成员入驻
-covibe team sync               # 同步配置，检测冲突
-
-covibe sync start              # 启动 P2P 实时同步
-covibe sync status             # 查看谁在线、谁在改什么
-
-covibe experience add "..."    # 记录团队经验
-covibe experience list         # 查看经验
-covibe experience inject       # 注入相关经验
-
-covibe coordinate "任务描述"    # Agent 智能分工
-
-covibe template <type>         # 输出模板
+# covibe 自动完成：
+# ✓ 安装开发环境依赖
+# ✓ 创建个人配置（不影响团队设置）
+# ✓ 生成成员画像
+# ✓ 注入团队经验板 top-10 经验
+# ✓ AI 自动了解：技术栈、构建命令、代码规范、质量红线
 ```
 
-## 核心特色
+David 的 AI 第一次对话就知道：项目用 FastAPI + React 19，commit 要用中文语义化前缀，禁止 force push，MySQL 大表 ALTER 要用 pt-online-schema-change。
 
-### 1. 自动探测，零配置
+### 案例 2：防止决策互相覆盖
 
-支持 Node.js / Python / Go / Rust / 全栈 / Monorepo，自动识别框架、命令、目录结构。
+**场景**：Alice 上午决定把按钮改成圆角，下午 Bob 不知情又改回直角。
 
-### 2. 团队三级规则
+```
+Alice 编辑 Button.tsx → covibe 广播: "alice 正在编辑 Button.tsx"
+Alice commit → 决策记录: "按钮改为圆角，用户反馈直角太硬"
 
-| 级别 | 含义 | 能覆盖吗 |
-|------|------|---------|
-| **enforced** | 团队铁律（质量红线、安全规则） | 不能 |
-| **recommended** | 团队推荐 | 可以 |
-| **personal** | 个人偏好 | 随意 |
+Bob 的 AI 准备改 Button.tsx：
+  → PreToolUse hook 触发
+  → "⚠️ alice 最近修改了 Button.tsx，她决定把按钮改为圆角（原因：用户反馈）"
+  → Bob 的 AI 主动告知 Bob 这个上下文，避免冲突
+```
 
-### 3. 共享经验板
+### 案例 3：踩坑经验自动传递
 
-零基建（纯 JSON，随 Git 走），团队踩过的坑自动提醒下一个人。
+**场景**：Bob 花 3 小时解决了 Redis 连接池问题。
 
 ```bash
-covibe experience add "MySQL 大表 ALTER 用 pt-online-schema-change" --category db --author alice
+# Bob 记录经验
+covibe experience add "Redis 连接池 max_connections 不要超过 50，否则 OOM" \
+  --category performance --tags redis,connection-pool
+
+# 两周后 Charlie 接到 Redis 优化任务
+# covibe 自动注入：
+## 团队经验（供参考）
+# - [performance/bob] Redis 连接池 max_connections 不要超过 50 👍3
+# - [performance/alice] Redis 缓存 TTL 建议 5 分钟，太长会导致数据不一致 👍2
 ```
 
-### 4. P2P 实时同步
+Charlie 的 AI 直接就知道了上限是 50，不用再踩一次坑。
 
-团队任一成员电脑上启动 sync server，其他人连接。零额外基建。
+### 案例 4：AI 帮你分工
+
+**场景**：团队接到一个新功能——"给平台添加 Slack 集成"。
 
 ```bash
-# Alice 启动
-covibe sync start --port 3456 &
+covibe coordinate "添加 Slack 集成：OAuth 认证 + 消息收发 + Webhook"
 
-# Bob 连接
-export HARNESS_SYNC_SERVER="http://alice-ip:3456"
+## 分工建议
+
+| # | 子任务 | 分配给 | 匹配度 | 理由 |
+|---|--------|--------|--------|------|
+| 1 | OAuth 认证流程 | Bob | 95% | 上个月刚做过飞书 OAuth，代码在 backend/app/services/ |
+| 2 | Slack API 消息收发 | Charlie | 88% | 熟悉 WebSocket，最近在改 channel 模块 |
+| 3 | Webhook 端点 | Bob | 90% | API 路由他最熟，git blame 占比 60% |
+| 4 | 前端配置页面 | Alice | 92% | React 专家，刚做完类似的飞书配置页 |
+
+### 团队经验提醒
+- [backend/bob] IM 集成要统一走 channel_config 表，别单独建表
 ```
 
-自动实现：编辑状态广播、文件冲突检测、决策同步。
+### 案例 5：实时协作不踩脚
 
-### 5. Agent 智能分工
+**场景**：Alice 和 Charlie 同时在线开发。
 
-基于成员画像 + git blame 分析，���动推荐任务分配。
+```bash
+# Alice 的终端
+covibe sync status
+# → 项目: clawith | 在线: 3
+# → 成员: alice, bob, charlie
+# → 当前编辑:
+# →   charlie → frontend/src/pages/Dashboard.tsx
 
-### 6. 100 分制审计
+# Alice 的 AI 准备改 Dashboard.tsx
+# → ⚠️ charlie 正在编辑 Dashboard.tsx，注意协调！
+# Alice 知道了，选择先做别的页面，等 Charlie 完成再改
+```
 
-14 项检���覆盖知识、工具、权限、记忆、质量、团队六个维度。
+---
+
+## 全部功能
+
+| 功能 | 命令 | 说明 |
+|------|------|------|
+| **一键初始化** | `covibe init` | 自动探测技术栈，生成 CLAUDE.md + 配置 + 工作流 |
+| **健康审计** | `covibe audit` | 14 项检查，100 分制评分 |
+| **团队初始化** | `covibe team init` | 创建团队配置、经验板、分工目录 |
+| **新人引导** | `covibe team onboard` | 交互式引导 + setup 脚本 |
+| **配置同步** | `covibe team sync` | 检测本地配置与团队规范的冲突 |
+| **实时同步** | `covibe sync start` | P2P WebSocket 服务器（任一成员电脑上运行） |
+| **同步状态** | `covibe sync status` | 查看谁在线、谁在改什么文件 |
+| **添加经验** | `covibe experience add` | 记录团队经验（带分类、标签、作者） |
+| **查看经验** | `covibe experience list` | 按类别和标签过滤经验 |
+| **注入经验** | `covibe experience inject` | 为当前任务注入相关经验 |
+| **智能分工** | `covibe coordinate "任务"` | 基于成员画像 + git blame 推荐分工 |
+| **生成模板** | `covibe template <type>` | 10 种模板随时查阅 |
+
+---
+
+## 安全模型
+
+### 连接架构
+
+```
+内网 (192.168.x.x)
+┌──────────┐     WebSocket      ┌──────────┐
+│ Alice     │◄──────────────────►│ Sync     │
+│ + AI      │                    │ Server   │
+└──────────┘                    │(Alice 的  │
+                                │ 电脑)     │
+┌──────────┐     WebSocket      │          │
+│ Bob       │◄──────────────────►│ :3456    │
+│ + AI      │                    └──────────┘
+└──────────┘         │
+                     │ HTTP REST (hooks)
+                     └── curl /broadcast
+```
+
+### 安全设计
+
+| 层面 | 措施 |
+|------|------|
+| **代码不经过 server** | sync 只传文件路径和决策摘要，代码通过 Git 管理 |
+| **纯内网** | 服务器监听 0.0.0.0 但只在内网使用 |
+| **无持久存储** | 服务端内存中只保留最近 100 条消息，重启即清空 |
+| **项目隔离** | `--project` 参数隔离不同项目的消息 |
+| **本地日志** | sync.jsonl 只写在本地 `.teamwork/live/`，gitignored |
+
+### 数据流
+
+| 传输内容 | 示例 | 包含代码？ |
+|---------|------|-----------|
+| 编辑状态 | `"alice 正在编辑 src/Header.tsx"` | 否，只有路径 |
+| 决策摘要 | `"按钮改为圆角，原因：用户反馈"` | 否，只有摘要 |
+| 经验记录 | `"Redis 连接池不超过 50"` | 否，只有结论 |
+| 冲突警告 | `"bob 也在编辑 Header.tsx"` | 否 |
+
+**底线：即使 sync server 被完全窃听，攻击者也只能看到谁在改什么文件，看不到任何��码内容。**
+
+### 进阶安全（可选配置）
+
+```bash
+# 1. Token 认证（计划中）
+covibe sync start --token "team-secret-2026"
+
+# 2. TLS 加密（通过 nginx 反代）
+# nginx 配置 wss:// → ws://localhost:3456
+
+# 3. IP 白名单（计划中）
+covibe sync start --allow-ips "192.168.1.100,192.168.1.101"
+```
+
+---
+
+## 团队规则三级分离
+
+| 级别 | 含义 | 能覆盖吗 | 示例 |
+|------|------|---------|------|
+| **enforced** | 团队铁律 | 不能 | 禁止 force push、禁止假数据、测试必须通过 |
+| **recommended** | 团队推荐 | 可以 | 中文 commit、snake_case 命名 |
+| **personal** | 个人偏好 | 随意 | 执行风格、模型选择、编辑器主题 |
+
+---
+
+## 零依赖设计
+
+- **CLI**: 纯 Node.js（>=18），零 npm 依赖
+- **Sync Server**: 自实现 WebSocket 协议，不需要 `ws` 包
+- **Hook 脚本**: 纯 bash + curl
+- **数据格式**: JSON + Markdown，人可读、Git 可追踪
+- **存储**: 文件系统，不需要数据库
+
+---
+
+## 支持的技术栈
+
+自动探测引擎支持：
+
+| 语言 | 框架 |
+|------|------|
+| **Node.js / TypeScript** | React, Next.js, Vue, Nuxt, Svelte, Express, NestJS |
+| **Python** | FastAPI, Django, Flask |
+| **Go** | 标准项目结构 |
+| **Rust** | Cargo 项目 |
+| **全栈** | frontend/ + backend/ 自动识别 |
+| **Monorepo** | packages/ / apps/ + Turbo/Nx |
+
+---
 
 ## 设计理念
 
-**Harness 三轴模型** — 工具（行动能力）× 知识（认知能力）× 权限（行为边界）
+**Harness 三轴模型**：工具（行动能力）× 知识（认知能力）× 权限（行为边界）
 
-**��大模式** — 宪法模式、记忆分层、证据门禁、钩子守卫、Harness-First、决策保护、共享经验板、Agent 智能分工
+**八大模式**：宪法模式、记忆分层、证据门禁、钩子守卫、Harness-First、决策保护、共享经验板、Agent 智能分工
 
 ## 致谢
 
-- [shareAI-lab/learn-claude-code](https://github.com/shareAI-lab/learn-claude-code) — 三轴模型
-- [lazyFrogLOL/Harness_Engineering](https://github.com/lazyFrogLOL/Harness_Engineering) — 宪法模式
+- [shareAI-lab/learn-claude-code](https://github.com/shareAI-lab/learn-claude-code) — Harness 三轴模型
+- [lazyFrogLOL/Harness_Engineering](https://github.com/lazyFrogLOL/Harness_Engineering) — 宪法模式、记忆分层
 - [Disrush/teamvibe](https://github.com/Disrush/teamvibe) — 决策版本管理
-- [oh-my-claudecode](https://github.com/Yeachan-Heo/oh-my-claudecode) — Hook 系统
+- [oh-my-claudecode](https://github.com/Yeachan-Heo/oh-my-claudecode) — Hook 守卫、Skill 系统
 
 ## License
 
