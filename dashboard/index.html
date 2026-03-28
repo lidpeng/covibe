@@ -5,237 +5,192 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>covibe — 团队 Vibe Dashboard</title>
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
+* { margin:0; padding:0; box-sizing:border-box; }
 :root {
-  --bg: #0a0a0f; --card-bg: #12121a; --card-border: #1e1e2e;
-  --text: #e0e0e0; --text-dim: #888; --accent: #7c5bf5;
-  --accent-glow: rgba(124,91,245,0.3); --green: #4ade80;
-  --yellow: #facc15; --red: #f87171; --blue: #60a5fa; --orange: #fb923c;
+  --bg:#0a0a0f; --card-bg:#12121a; --card-border:#1e1e2e;
+  --text:#e0e0e0; --text-dim:#888; --accent:#7c5bf5;
+  --accent-glow:rgba(124,91,245,0.3); --green:#4ade80;
+  --yellow:#facc15; --red:#f87171; --blue:#60a5fa; --orange:#fb923c;
 }
-body { font-family: 'SF Mono','JetBrains Mono','Fira Code',monospace; background: var(--bg); color: var(--text); min-height: 100vh; }
+body { font-family:'SF Mono','JetBrains Mono','Fira Code',monospace; background:var(--bg); color:var(--text); min-height:100vh; }
+body.light { --bg:#f5f5f7; --card-bg:#fff; --card-border:#e0e0e8; --text:#1a1a2e; --text-dim:#888; --accent:#6c4bf5; --accent-glow:rgba(108,75,245,0.2); }
+body.light .sidebar { background:#fff; }
+body.light .feed-item,.kanban-card,.exp-card { background:rgba(0,0,0,0.02); }
 
-/* Layout: sidebar + content */
-.app-layout { display:flex; min-height:100vh; }
+/* Layout */
+.app { display:flex; min-height:100vh; }
 
-/* Sidebar */
-.sidebar-nav { width:200px; background:#12121a; border-right:1px solid var(--card-border); position:fixed; top:0; left:0; bottom:0; display:flex; flex-direction:column; z-index:100; }
-.sidebar-logo { padding:20px 16px 12px; border-bottom:1px solid var(--card-border); }
-.logo { font-size:22px; font-weight:700; background:linear-gradient(135deg,#7c5bf5,#60a5fa); -webkit-background-clip:text; -webkit-text-fill-color:transparent; cursor:pointer; display:block; }
-.logo-sub { font-size:10px; color:var(--text-dim); margin-top:2px; }
-.nav-links { display:flex; flex-direction:column; padding:12px 8px; gap:4px; flex:1; }
-.nav-link { padding:12px 14px; border-radius:10px; font-size:13px; cursor:pointer; color:var(--text-dim); transition:all .2s; text-decoration:none; display:flex; align-items:center; gap:10px; }
-.nav-link:hover { background:rgba(255,255,255,0.05); color:var(--text); }
-.nav-link.active { background:var(--accent); color:#fff; }
-.nav-link .nav-icon { font-size:18px; width:24px; text-align:center; }
-.nav-link .nav-label { font-weight:500; }
-.sidebar-bottom { padding:12px 16px; border-top:1px solid var(--card-border); }
-.status-badge { display:flex; align-items:center; gap:6px; padding:6px 12px; border-radius:10px; font-size:11px; margin-bottom:8px; }
-.status-badge.online { background:rgba(74,222,128,0.15); color:var(--green); }
-.status-badge.offline { background:rgba(248,113,113,0.15); color:var(--red); }
-.status-dot { width:6px; height:6px; border-radius:50%; animation:pulse 2s infinite; }
-.online .status-dot { background:var(--green); }
-.offline .status-dot { background:var(--red); }
+/* Sidebar - narrow */
+.sidebar { width:56px; background:#12121a; border-right:1px solid var(--card-border); position:fixed; top:0; left:0; bottom:0; display:flex; flex-direction:column; align-items:center; z-index:100; padding:12px 0; }
+.sidebar .logo { font-size:24px; cursor:pointer; margin-bottom:16px; }
+.sidebar .nav-btn { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:18px; cursor:pointer; margin-bottom:6px; transition:all .2s; position:relative; }
+.sidebar .nav-btn:hover { background:rgba(255,255,255,0.08); }
+.sidebar .nav-btn.active { background:var(--accent); }
+.sidebar .nav-btn .tooltip { display:none; position:absolute; left:52px; background:var(--card-bg); border:1px solid var(--card-border); padding:4px 10px; border-radius:6px; font-size:11px; white-space:nowrap; z-index:200; }
+.sidebar .nav-btn:hover .tooltip { display:block; }
+.sidebar-bottom { margin-top:auto; display:flex; flex-direction:column; align-items:center; gap:8px; }
+.sidebar .conn-dot { width:10px; height:10px; border-radius:50%; }
+.sidebar .conn-dot.on { background:var(--green); animation:pulse 2s infinite; }
+.sidebar .conn-dot.off { background:var(--red); animation:pulse 2s infinite; }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
-.stat-row { display:flex; gap:12px; }
-.stat-chip { font-size:11px; color:var(--text-dim); }
-.stat-chip b { color:var(--text); }
+.theme-btn { width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:16px; cursor:pointer; transition:all .2s; }
+.theme-btn:hover { background:rgba(255,255,255,0.08); }
 
-/* Page container */
-.page-wrapper { margin-left:200px; flex:1; }
-.page { padding:20px 24px; display:none; }
-.page.active { display:block; }
+/* Main content */
+.main { margin-left:56px; flex:1; padding:16px; display:grid; grid-template-rows:auto 1fr; gap:12px; height:100vh; overflow:hidden; }
 
-/* ── Overview ── */
-.overview-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
-.team-row { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:16px; }
-.member-mini { background:var(--card-bg); border:1px solid var(--card-border); border-radius:12px; padding:10px 14px; display:flex; align-items:center; gap:10px; min-width:180px; flex:1; max-width:240px; transition:all .2s; cursor:pointer; }
-.member-mini:hover { border-color:var(--accent); transform:translateY(-1px); }
-.member-mini.vibing { border-color:var(--green); }
-.member-mini.blocked { border-color:var(--red); }
-.member-mini img { width:40px; height:40px; image-rendering:pixelated; }
-.member-mini .info { flex:1; min-width:0; }
-.member-mini .name { font-size:12px; font-weight:600; }
-.member-mini .status-text { font-size:10px; color:var(--text-dim); }
-.member-mini .file-tag { font-size:9px; color:var(--accent); background:rgba(124,91,245,0.1); padding:1px 6px; border-radius:4px; display:inline-block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:130px; }
+/* Top: Team bar */
+.team-bar { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+.team-bar .title { font-size:13px; font-weight:600; color:var(--text-dim); margin-right:8px; white-space:nowrap; }
+.member-chip { background:var(--card-bg); border:1px solid var(--card-border); border-radius:10px; padding:6px 10px; display:flex; align-items:center; gap:8px; transition:all .2s; cursor:pointer; }
+.member-chip:hover { border-color:var(--accent); transform:translateY(-1px); }
+.member-chip.vibing { border-color:var(--green); }
+.member-chip.blocked { border-color:var(--red); }
+.member-chip img { width:32px; height:32px; image-rendering:pixelated; }
+.member-chip .name { font-size:11px; font-weight:600; }
+.member-chip .sub { font-size:9px; color:var(--text-dim); }
+.member-chip .file-tag { font-size:8px; color:var(--accent); background:rgba(124,91,245,0.1); padding:1px 5px; border-radius:3px; max-width:110px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:block; }
 
-/* Panel */
-.panel { background:var(--card-bg); border:1px solid var(--card-border); border-radius:12px; padding:14px; }
-.panel-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+/* Bottom: panels grid */
+.panels { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; overflow:hidden; }
+.panel { background:var(--card-bg); border:1px solid var(--card-border); border-radius:12px; display:flex; flex-direction:column; overflow:hidden; }
+.panel-head { display:flex; justify-content:space-between; align-items:center; padding:10px 12px; border-bottom:1px solid var(--card-border); flex-shrink:0; }
 .panel-title { font-size:12px; font-weight:600; display:flex; align-items:center; gap:6px; }
-.panel-more { font-size:10px; color:var(--accent); cursor:pointer; }
+.panel-count { font-size:10px; color:var(--text-dim); background:rgba(255,255,255,0.05); padding:1px 8px; border-radius:10px; }
+.panel-body { padding:8px; overflow-y:auto; flex:1; }
 
-/* Feed */
-.feed { display:flex; flex-direction:column; gap:6px; max-height:280px; overflow-y:auto; }
-.feed-item { font-size:11px; padding:6px 8px; border-radius:6px; background:rgba(255,255,255,0.02); border-left:3px solid var(--card-border); }
+/* Feed items */
+.feed-item { font-size:10px; padding:5px 8px; border-radius:6px; background:rgba(255,255,255,0.02); border-left:3px solid var(--card-border); margin-bottom:4px; }
 .feed-item.editing { border-left-color:var(--yellow); }
 .feed-item.decision { border-left-color:var(--accent); }
 .feed-item.experience { border-left-color:var(--green); }
 .feed-item.conflict { border-left-color:var(--red); }
 .feed-item.board { border-left-color:var(--blue); }
 .feed-item.join { border-left-color:var(--orange); }
-.feed-time { color:var(--text-dim); font-size:9px; margin-right:6px; }
+.feed-time { color:var(--text-dim); font-size:8px; margin-right:4px; }
 
-/* ── Board page ── */
-.kanban { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
-.kanban-col { background:var(--card-bg); border:1px solid var(--card-border); border-radius:12px; padding:12px; min-height:300px; }
-.kanban-col-title { font-size:12px; font-weight:600; margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid var(--card-border); }
-.kanban-card { background:rgba(255,255,255,0.03); border-radius:8px; padding:8px 10px; margin-bottom:8px; font-size:11px; border-left:3px solid var(--card-border); }
-.kanban-card.todo { border-left-color:var(--text-dim); }
-.kanban-card.vibing { border-left-color:var(--green); animation:glow 2s infinite; }
-.kanban-card.done { border-left-color:var(--accent); opacity:0.7; }
+/* Kanban cards */
+.kanban-section { margin-bottom:8px; }
+.kanban-label { font-size:9px; color:var(--text-dim); font-weight:600; margin-bottom:4px; text-transform:uppercase; }
+.kanban-card { background:rgba(255,255,255,0.03); border-radius:6px; padding:6px 8px; margin-bottom:4px; font-size:10px; border-left:3px solid var(--card-border); }
+.kanban-card.vibing { border-left-color:var(--green); }
+.kanban-card.done { border-left-color:var(--accent); opacity:.7; }
 .kanban-card.blocked { border-left-color:var(--red); }
-.kanban-card .assignee { font-size:9px; color:var(--accent); margin-top:4px; }
-@keyframes glow { 0%,100%{box-shadow:none} 50%{box-shadow:0 0 8px var(--accent-glow)} }
+.kanban-card .assignee { font-size:8px; color:var(--accent); }
 
-/* ── Experience page ── */
-.exp-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:12px; }
-.exp-card { background:var(--card-bg); border:1px solid var(--card-border); border-radius:12px; padding:14px; }
-.exp-card .content { font-size:12px; margin-bottom:8px; }
-.exp-card .meta { font-size:10px; color:var(--text-dim); display:flex; justify-content:space-between; }
-.exp-tag { font-size:9px; background:rgba(124,91,245,0.15); color:var(--accent); padding:2px 6px; border-radius:4px; }
-.exp-upvote { cursor:pointer; transition:transform .2s; }
-.exp-upvote:hover { transform:scale(1.3); }
+/* Experience cards */
+.exp-item { background:rgba(255,255,255,0.02); border-radius:6px; padding:6px 8px; margin-bottom:4px; font-size:10px; border-left:3px solid var(--green); }
+.exp-meta { font-size:8px; color:var(--text-dim); display:flex; justify-content:space-between; margin-top:3px; }
+.exp-upvote { cursor:pointer; }
+.exp-upvote:hover { transform:scale(1.2); }
 
-/* ── Member detail page ── */
-.member-detail { display:grid; grid-template-columns:250px 1fr; gap:20px; }
-.member-profile { background:var(--card-bg); border:1px solid var(--card-border); border-radius:12px; padding:20px; text-align:center; }
-.member-profile img { width:120px; height:120px; image-rendering:pixelated; margin-bottom:12px; }
-.member-profile .name { font-size:16px; font-weight:700; margin-bottom:4px; }
-.member-profile .role { font-size:12px; color:var(--accent); margin-bottom:12px; }
-.skill-tags { display:flex; flex-wrap:wrap; gap:4px; justify-content:center; }
-.skill-tag { font-size:10px; padding:2px 8px; border-radius:10px; background:rgba(96,165,250,0.15); color:var(--blue); }
-.skill-tag.primary { background:rgba(74,222,128,0.15); color:var(--green); }
-.member-stats { display:grid; grid-template-columns:1fr 1fr; gap:12px; align-content:start; }
-.stat-card { background:var(--card-bg); border:1px solid var(--card-border); border-radius:12px; padding:14px; }
-.stat-card .label { font-size:10px; color:var(--text-dim); }
-.stat-card .value { font-size:24px; font-weight:700; margin-top:4px; }
-.stat-card .value.green { color:var(--green); }
-.stat-card .value.accent { color:var(--accent); }
+/* Stats row */
+.stats-row { display:flex; gap:8px; padding:8px; }
+.stat-mini { flex:1; text-align:center; }
+.stat-mini .num { font-size:20px; font-weight:700; }
+.stat-mini .label { font-size:8px; color:var(--text-dim); }
+.stat-mini .num.green { color:var(--green); }
+.stat-mini .num.yellow { color:var(--yellow); }
+.stat-mini .num.accent { color:var(--accent); }
+.stat-mini .num.red { color:var(--red); }
 
-/* ── Stats page ── */
-.stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px; }
-.stat-big { background:var(--card-bg); border:1px solid var(--card-border); border-radius:12px; padding:16px; text-align:center; }
-.stat-big .num { font-size:32px; font-weight:700; }
-.stat-big .label { font-size:11px; color:var(--text-dim); margin-top:4px; }
-.heatmap { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:8px; }
-.heat-item { background:var(--card-bg); border:1px solid var(--card-border); border-radius:8px; padding:8px 12px; font-size:11px; display:flex; justify-content:space-between; }
-.heat-bar { height:4px; border-radius:2px; margin-top:4px; }
+/* Heat items */
+.heat-item { font-size:9px; padding:4px 8px; display:flex; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,0.03); }
 
-/* Theme toggle button */
-.theme-toggle { font-size:12px; color:var(--text-dim); cursor:pointer; padding:8px 12px; border-radius:8px; margin-top:8px; transition:all .2s; text-align:center; }
-.theme-toggle:hover { background:rgba(255,255,255,0.05); color:var(--text); }
+/* Empty state */
+.empty { font-size:10px; color:var(--text-dim); text-align:center; padding:20px; }
 
-/* ── Light Theme ── */
-body.light { --bg:#f5f5f7; --card-bg:#fff; --card-border:#e0e0e8; --text:#1a1a2e; --text-dim:#888; --accent:#6c4bf5; --accent-glow:rgba(108,75,245,0.2); }
-body.light .sidebar-nav { background:#fff; }
-body.light .topbar { background:#fff; }
-body.light .nav-link:hover { background:rgba(0,0,0,0.04); }
-body.light .feed-item { background:rgba(0,0,0,0.02); }
-body.light .kanban-card { background:rgba(0,0,0,0.02); }
-body.light .exp-card { background:#fff; }
-body.light .theme-toggle:hover { background:rgba(0,0,0,0.05); }
+/* Member modal */
+.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:200; align-items:center; justify-content:center; }
+.modal-overlay.show { display:flex; }
+.modal { background:var(--card-bg); border:1px solid var(--card-border); border-radius:16px; padding:24px; max-width:400px; width:90%; text-align:center; position:relative; }
+.modal-close { position:absolute; top:12px; right:16px; cursor:pointer; font-size:18px; color:var(--text-dim); }
+.modal img { width:100px; height:100px; image-rendering:pixelated; margin-bottom:12px; }
+.modal .name { font-size:18px; font-weight:700; margin-bottom:4px; }
+.modal .role { font-size:12px; color:var(--accent); margin-bottom:12px; }
+.modal-stats { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:12px; }
+.modal-stat { background:rgba(255,255,255,0.03); border-radius:8px; padding:8px; }
+.modal-stat .val { font-size:20px; font-weight:700; color:var(--accent); }
+.modal-stat .lbl { font-size:9px; color:var(--text-dim); }
 
-/* Scrollbar */
-::-webkit-scrollbar { width:4px; }
-::-webkit-scrollbar-thumb { background:var(--card-border); border-radius:4px; }
+::-webkit-scrollbar { width:3px; }
+::-webkit-scrollbar-thumb { background:var(--card-border); border-radius:3px; }
 </style>
 </head>
 <body>
-
-<div class="app-layout">
+<div class="app">
 
 <!-- Sidebar -->
-<nav class="sidebar-nav">
-  <div class="sidebar-logo">
-    <div class="logo" onclick="navigate('overview')">🎵 covibe</div>
-    <div class="logo-sub">团队 Vibe Dashboard</div>
-  </div>
-  <div class="nav-links">
-    <a class="nav-link active" data-page="overview" onclick="navigate('overview')"><span class="nav-icon">🏠</span><span class="nav-label">概览</span></a>
-    <a class="nav-link" data-page="board" onclick="navigate('board')"><span class="nav-icon">📋</span><span class="nav-label">任务看板</span></a>
-    <a class="nav-link" data-page="activity" onclick="navigate('activity')"><span class="nav-icon">⚡</span><span class="nav-label">实时动态</span></a>
-    <a class="nav-link" data-page="experience" onclick="navigate('experience')"><span class="nav-icon">💡</span><span class="nav-label">经验板</span></a>
-    <a class="nav-link" data-page="stats" onclick="navigate('stats')"><span class="nav-icon">📊</span><span class="nav-label">统计</span></a>
-  </div>
+<nav class="sidebar">
+  <div class="logo">🎵</div>
+  <div class="nav-btn active" onclick="scrollTo(0,0)"><span>🏠</span><span class="tooltip">概览</span></div>
   <div class="sidebar-bottom">
-    <div id="connStatus" class="status-badge offline"><div class="status-dot"></div><span>连接中</span></div>
-    <div class="stat-row">
-      <span class="stat-chip">👥 <b id="onlineCount">0</b></span>
-      <span class="stat-chip">📝 <b id="editCount">0</b></span>
-    </div>
-    <div class="theme-toggle" onclick="toggleTheme()" title="切换明暗模式">🌗 切换主题</div>
+    <div id="connDot" class="conn-dot off" title="未连接"></div>
+    <div class="theme-btn" onclick="toggleTheme()" title="切换主题">🌗</div>
   </div>
 </nav>
 
-<!-- Content -->
-<div class="page-wrapper">
+<!-- Main -->
+<div class="main">
+  <!-- Team bar -->
+  <div class="team-bar">
+    <span class="title" id="teamTitle">🎵 等待成员上线...</span>
+    <div id="teamChips"></div>
+  </div>
 
-<!-- Overview Page -->
-<div id="page-overview" class="page active">
-  <div id="teamRow" class="team-row"></div>
-  <div class="overview-grid">
+  <!-- Panels grid -->
+  <div class="panels">
+    <!-- Activity -->
     <div class="panel">
       <div class="panel-head">
-        <div class="panel-title">⚡ 最新动态</div>
-        <div class="panel-more" onclick="navigate('activity')">查看全部 →</div>
+        <div class="panel-title">⚡ 实时动态</div>
+        <div class="panel-count" id="feedCount">0</div>
       </div>
-      <div id="overviewFeed" class="feed"></div>
+      <div class="panel-body" id="feedBody"><div class="empty">等待活动...</div></div>
     </div>
+
+    <!-- Board -->
     <div class="panel">
       <div class="panel-head">
         <div class="panel-title">📋 任务看板</div>
-        <div class="panel-more" onclick="navigate('board')">查看全部 →</div>
+        <div class="panel-count" id="boardCount">0</div>
       </div>
-      <div id="overviewBoard" class="feed"></div>
+      <div class="panel-body" id="boardBody"><div class="empty">covibe board add "任务"</div></div>
+    </div>
+
+    <!-- Right column: Experience + Stats -->
+    <div style="display:flex;flex-direction:column;gap:12px;overflow:hidden;">
+      <!-- Experience -->
+      <div class="panel" style="flex:1;">
+        <div class="panel-head">
+          <div class="panel-title">💡 经验板</div>
+          <div class="panel-count" id="expCount">0</div>
+        </div>
+        <div class="panel-body" id="expBody"><div class="empty">covibe experience add "经验"</div></div>
+      </div>
+
+      <!-- Stats -->
+      <div class="panel" style="flex-shrink:0;">
+        <div class="panel-head"><div class="panel-title">📊 统计</div></div>
+        <div class="stats-row">
+          <div class="stat-mini"><div class="num green" id="sOnline">0</div><div class="label">在线</div></div>
+          <div class="stat-mini"><div class="num yellow" id="sEditing">0</div><div class="label">编辑</div></div>
+          <div class="stat-mini"><div class="num accent" id="sMessages">0</div><div class="label">消息</div></div>
+          <div class="stat-mini"><div class="num red" id="sConflicts">0</div><div class="label">冲突</div></div>
+        </div>
+        <div class="panel-body" id="heatBody" style="max-height:120px;"></div>
+      </div>
     </div>
   </div>
 </div>
-
-<!-- Board Page -->
-<div id="page-board" class="page">
-  <div class="kanban">
-    <div class="kanban-col"><div class="kanban-col-title">📋 待办</div><div id="col-todo"></div></div>
-    <div class="kanban-col"><div class="kanban-col-title">🎵 Vibing</div><div id="col-vibing"></div></div>
-    <div class="kanban-col"><div class="kanban-col-title">🚧 阻塞</div><div id="col-blocked"></div></div>
-    <div class="kanban-col"><div class="kanban-col-title">✅ 完成</div><div id="col-done"></div></div>
-  </div>
 </div>
 
-<!-- Activity Page -->
-<div id="page-activity" class="page">
-  <div class="panel">
-    <div class="panel-title" style="margin-bottom:12px">⚡ 完整活动时间线</div>
-    <div id="fullFeed" class="feed" style="max-height:calc(100vh - 140px)"></div>
+<!-- Member Modal -->
+<div class="modal-overlay" id="memberModal">
+  <div class="modal">
+    <span class="modal-close" onclick="closeModal()">✕</span>
+    <div id="modalContent"></div>
   </div>
-</div>
-
-<!-- Experience Page -->
-<div id="page-experience" class="page">
-  <div class="panel-title" style="margin-bottom:12px">💡 团队经验板</div>
-  <div id="expGrid" class="exp-grid"></div>
-</div>
-
-<!-- Stats Page -->
-<div id="page-stats" class="page">
-  <div class="stats-grid">
-    <div class="stat-big"><div class="num" style="color:var(--green)" id="statOnline">0</div><div class="label">在线成员</div></div>
-    <div class="stat-big"><div class="num" style="color:var(--yellow)" id="statEditing">0</div><div class="label">正在编辑</div></div>
-    <div class="stat-big"><div class="num" style="color:var(--accent)" id="statMessages">0</div><div class="label">总消息数</div></div>
-    <div class="stat-big"><div class="num" style="color:var(--red)" id="statConflicts">0</div><div class="label">冲突次数</div></div>
-  </div>
-  <div class="panel" style="margin-bottom:16px">
-    <div class="panel-title" style="margin-bottom:10px">🔥 编辑热力图（哪些文件被改得最多）</div>
-    <div id="heatmap" class="heatmap"></div>
-  </div>
-  <div class="panel">
-    <div class="panel-title" style="margin-bottom:10px">📊 成员活跃度</div>
-    <div id="memberActivity" class="heatmap"></div>
-  </div>
-</div>
-
-<!-- Member Detail Page -->
-<div id="page-member" class="page">
-  <div id="memberDetail" class="member-detail"></div>
 </div>
 
 <script>
@@ -245,245 +200,160 @@ const token = params.get('token') || '';
 
 const members = new Map();
 const feed = [];
-const fileEdits = {};  // file -> count
-const memberEdits = {}; // name -> count
+const fileEdits = {};
+const memberEdits = {};
 let conflictCount = 0;
 let ws;
 
-// ── Navigation ──
-function navigate(page, data) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
-  const el = document.getElementById(`page-${page}`);
-  if (el) el.classList.add('active');
-  const nav = document.querySelector(`[data-page="${page}"]`);
-  if (nav) nav.classList.add('active');
-  if (page === 'member' && data) renderMemberDetail(data);
-  if (page === 'board') renderBoard();
-  if (page === 'experience') renderExperiences();
-  if (page === 'stats') renderStats();
-  if (page === 'activity') renderFullFeed();
-}
-
-// ── State mapping ──
 const STATE_MAP = {
-  editing: { gif:'clawd-typing.gif', label:'正在编辑', cls:'vibing' },
-  vibing: { gif:'clawd-typing.gif', label:'正在 vibing', cls:'vibing' },
-  thinking: { gif:'clawd-thinking.gif', label:'思考中', cls:'vibing' },
-  building: { gif:'clawd-building.gif', label:'构建中', cls:'vibing' },
-  blocked: { gif:'clawd-error.gif', label:'被阻塞', cls:'blocked' },
-  done: { gif:'clawd-happy.gif', label:'完成！', cls:'vibing' },
-  idle: { gif:'clawd-idle.gif', label:'空闲', cls:'' },
-  sleep: { gif:'clawd-sleeping.gif', label:'已下线', cls:'' },
+  editing:{gif:'clawd-typing.gif',label:'正在编辑',cls:'vibing'},
+  vibing:{gif:'clawd-typing.gif',label:'vibing',cls:'vibing'},
+  thinking:{gif:'clawd-thinking.gif',label:'思考中',cls:'vibing'},
+  building:{gif:'clawd-building.gif',label:'构建中',cls:'vibing'},
+  blocked:{gif:'clawd-error.gif',label:'阻塞',cls:'blocked'},
+  done:{gif:'clawd-happy.gif',label:'完成',cls:'vibing'},
+  idle:{gif:'clawd-idle.gif',label:'空闲',cls:''},
+  sleep:{gif:'clawd-sleeping.gif',label:'离线',cls:''},
 };
 
-function updateMember(name, status, file) {
-  if (!name || name === '🖥️ Dashboard') return;
-  const m = members.get(name) || { name, status:'idle', file:null, edits:0, decisions:[], experiences:[] };
-  m.status = status;
-  if (file !== undefined) m.file = file;
-  if (status === 'editing') { m.edits++; memberEdits[name] = (memberEdits[name]||0)+1; fileEdits[file] = (fileEdits[file]||0)+1; }
-  m.lastSeen = Date.now();
-  members.set(name, m);
+function updateMember(name,status,file){
+  if(!name||name==='🖥️ Dashboard') return;
+  const m=members.get(name)||{name,status:'idle',file:null,edits:0};
+  m.status=status;
+  if(file!==undefined) m.file=file;
+  if(status==='editing'){m.edits++;memberEdits[name]=(memberEdits[name]||0)+1;if(file)fileEdits[file]=(fileEdits[file]||0)+1;}
+  m.lastSeen=Date.now();
+  members.set(name,m);
+}
+function shortPath(p){if(!p)return'';const a=p.split('/');return a.length>2?'...'+a.slice(-2).join('/'):p;}
+
+function addFeed(type,text,ts){
+  feed.unshift({type,text,ts:ts||new Date().toISOString()});
+  if(feed.length>200)feed.pop();
 }
 
-function shortPath(p) { if(!p) return ''; const parts=p.split('/'); return parts.length>2 ? '...'+parts.slice(-2).join('/') : p; }
-
-function addFeed(type, text, ts) {
-  feed.unshift({ type, text, ts: ts || new Date().toISOString() });
-  if (feed.length > 200) feed.pop();
-  renderOverviewFeed();
-}
-
-// ── Render: Overview ──
-function renderMembers() {
-  const row = document.getElementById('teamRow');
-  if (members.size === 0) { row.innerHTML = '<div style="color:var(--text-dim);font-size:12px;padding:20px">等待成员上线... 🎵</div>'; return; }
-  row.innerHTML = '';
-  document.getElementById('onlineCount').textContent = members.size;
-  document.getElementById('editCount').textContent = [...members.values()].filter(m=>m.status==='editing').length;
-  for (const [name, m] of members) {
-    const s = STATE_MAP[m.status] || STATE_MAP.idle;
-    const card = document.createElement('div');
-    card.className = `member-mini ${s.cls}`;
-    card.onclick = () => navigate('member', name);
-    card.innerHTML = `<img src="assets/${s.gif}"><div class="info"><div class="name">${name}</div><div class="status-text">${s.label}</div>${m.file ? `<div class="file-tag">${shortPath(m.file)}</div>` : ''}</div>`;
-    row.appendChild(card);
+// ── Render ──
+function render(){
+  // Team chips
+  const chips=document.getElementById('teamChips');
+  const title=document.getElementById('teamTitle');
+  if(members.size===0){title.textContent='🎵 等待成员上线...';chips.innerHTML='';return;}
+  const onlineCount=[...members.values()].filter(m=>m.status!=='sleep').length;
+  const editCount=[...members.values()].filter(m=>m.status==='editing').length;
+  title.textContent=`👥 ${onlineCount} 在线 · 📝 ${editCount} 编辑中`;
+  chips.innerHTML='';
+  for(const[name,m]of members){
+    const s=STATE_MAP[m.status]||STATE_MAP.idle;
+    const chip=document.createElement('div');
+    chip.className=`member-chip ${s.cls}`;
+    chip.onclick=()=>showMember(name);
+    chip.innerHTML=`<img src="assets/${s.gif}"><div><div class="name">${name}</div><div class="sub">${s.label}</div>${m.file?`<div class="file-tag">${shortPath(m.file)}</div>`:''}</div>`;
+    chips.appendChild(chip);
   }
+
+  // Feed
+  document.getElementById('feedCount').textContent=feed.length;
+  document.getElementById('feedBody').innerHTML=feed.slice(0,30).map(f=>{
+    const t=f.ts?new Date(f.ts).toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'}):''
+    return`<div class="feed-item ${f.type}"><span class="feed-time">${t}</span>${f.text}</div>`;
+  }).join('')||'<div class="empty">等待活动...</div>';
+
+  // Experience
+  const exps=feed.filter(f=>f.type==='experience');
+  document.getElementById('expCount').textContent=exps.length;
+  document.getElementById('expBody').innerHTML=exps.length>0?exps.slice(0,10).map(f=>
+    `<div class="exp-item">${f.text}<div class="exp-meta"><span>${new Date(f.ts).toLocaleDateString('zh-CN')}</span><span class="exp-upvote">👍</span></div></div>`
+  ).join(''):'<div class="empty">covibe experience add "经验"</div>';
+
+  // Stats
+  document.getElementById('sOnline').textContent=onlineCount;
+  document.getElementById('sEditing').textContent=editCount;
+  document.getElementById('sMessages').textContent=feed.length;
+  document.getElementById('sConflicts').textContent=conflictCount;
+
+  // Heatmap
+  const sorted=Object.entries(fileEdits).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  document.getElementById('heatBody').innerHTML=sorted.length>0?sorted.map(([f,c])=>{
+    const color=c>3?'var(--red)':c>1?'var(--yellow)':'var(--green)';
+    return`<div class="heat-item"><span>${shortPath(f)}</span><span style="color:${color}">${c}次</span></div>`;
+  }).join(''):'<div class="empty">暂无编辑记录</div>';
 }
 
-function renderOverviewFeed() {
-  const el = document.getElementById('overviewFeed');
-  el.innerHTML = feed.slice(0,10).map(f => {
-    const t = f.ts ? new Date(f.ts).toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'}) : '';
-    return `<div class="feed-item ${f.type}"><span class="feed-time">${t}</span>${f.text}</div>`;
-  }).join('') || '<div style="font-size:11px;color:var(--text-dim)">等待活动...</div>';
-}
-
-function renderFullFeed() {
-  const el = document.getElementById('fullFeed');
-  el.innerHTML = feed.map(f => {
-    const t = f.ts ? new Date(f.ts).toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit',second:'2-digit'}) : '';
-    return `<div class="feed-item ${f.type}"><span class="feed-time">${t}</span>${f.text}</div>`;
-  }).join('') || '<div style="font-size:11px;color:var(--text-dim)">暂无活动</div>';
-}
-
-// ── Render: Board ──
-function renderBoard() {
-  for (const s of ['todo','vibing','blocked','done']) document.getElementById(`col-${s}`).innerHTML = '';
-  // Board items from feed (type: board)
-  const boardItems = feed.filter(f => f.type === 'board');
-  const el = document.getElementById('overviewBoard');
-  el.innerHTML = boardItems.length > 0
-    ? boardItems.slice(0,5).map(f => `<div class="feed-item board"><span class="feed-time">${new Date(f.ts).toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'})}</span>${f.text}</div>`).join('')
-    : '<div style="font-size:11px;color:var(--text-dim)">暂无任务。covibe board add "任务" 添加</div>';
-}
-
-// ── Render: Experience ──
-function renderExperiences() {
-  const exps = feed.filter(f => f.type === 'experience');
-  const el = document.getElementById('expGrid');
-  el.innerHTML = exps.length > 0 ? exps.map((f,i) => `
-    <div class="exp-card">
-      <div class="content">${f.text}</div>
-      <div class="meta"><span class="feed-time">${new Date(f.ts).toLocaleDateString('zh-CN')}</span><span class="exp-upvote" onclick="this.textContent='👍 +1'">👍</span></div>
-    </div>`).join('') : '<div style="color:var(--text-dim);font-size:12px">暂无经验。covibe experience add "经验" 添加</div>';
-}
-
-// ── Render: Stats ──
-function renderStats() {
-  document.getElementById('statOnline').textContent = members.size;
-  document.getElementById('statEditing').textContent = [...members.values()].filter(m=>m.status==='editing').length;
-  document.getElementById('statMessages').textContent = feed.length;
-  document.getElementById('statConflicts').textContent = conflictCount;
-
-  // File heatmap
-  const sorted = Object.entries(fileEdits).sort((a,b) => b[1]-a[1]).slice(0,10);
-  const maxCount = sorted[0]?.[1] || 1;
-  document.getElementById('heatmap').innerHTML = sorted.length > 0 ? sorted.map(([file, count]) => {
-    const pct = Math.round(count/maxCount*100);
-    const color = pct > 60 ? 'var(--red)' : pct > 30 ? 'var(--yellow)' : 'var(--green)';
-    return `<div class="heat-item"><span>${shortPath(file)}</span><span style="color:${color}">${count}次</span></div>`;
-  }).join('') : '<div style="font-size:11px;color:var(--text-dim)">暂无数据</div>';
-
-  // Member activity
-  const memberSorted = Object.entries(memberEdits).sort((a,b) => b[1]-a[1]);
-  document.getElementById('memberActivity').innerHTML = memberSorted.length > 0 ? memberSorted.map(([name, count]) => {
-    return `<div class="heat-item" style="cursor:pointer" onclick="navigate('member','${name}')"><span>👤 ${name}</span><span style="color:var(--accent)">${count} 次编辑</span></div>`;
-  }).join('') : '<div style="font-size:11px;color:var(--text-dim)">暂无数据</div>';
-}
-
-// ── Render: Member Detail ──
-function renderMemberDetail(name) {
-  const m = members.get(name);
-  if (!m) return;
-  const s = STATE_MAP[m.status] || STATE_MAP.idle;
-  const el = document.getElementById('memberDetail');
-  el.innerHTML = `
-    <div class="member-profile">
-      <img src="assets/${s.gif}">
-      <div class="name">${name}</div>
-      <div class="role">${s.label}</div>
-      ${m.file ? `<div class="file-tag" style="font-size:11px;margin-bottom:12px">${shortPath(m.file)}</div>` : ''}
-      <div style="font-size:11px;color:var(--text-dim);margin-top:8px">编辑次数: ${m.edits || 0}</div>
+// ── Member modal ──
+function showMember(name){
+  const m=members.get(name);if(!m)return;
+  const s=STATE_MAP[m.status]||STATE_MAP.idle;
+  const recent=feed.filter(f=>f.text.includes(name)).slice(0,5);
+  document.getElementById('modalContent').innerHTML=`
+    <img src="assets/${s.gif}">
+    <div class="name">${name}</div>
+    <div class="role">${s.label}${m.file?' · '+shortPath(m.file):''}</div>
+    <div class="modal-stats">
+      <div class="modal-stat"><div class="val">${m.edits||0}</div><div class="lbl">编辑次数</div></div>
+      <div class="modal-stat"><div class="val">${recent.length}</div><div class="lbl">最近活动</div></div>
     </div>
-    <div class="member-stats">
-      <div class="stat-card"><div class="label">编辑次数</div><div class="value green">${m.edits||0}</div></div>
-      <div class="stat-card"><div class="label">当前状态</div><div class="value accent">${s.label}</div></div>
-      <div class="panel" style="grid-column:span 2">
-        <div class="panel-title" style="margin-bottom:8px">📝 最近活动</div>
-        <div class="feed">${feed.filter(f=>f.text.includes(name)).slice(0,10).map(f =>
-          `<div class="feed-item ${f.type}"><span class="feed-time">${new Date(f.ts).toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'})}</span>${f.text}</div>`
-        ).join('') || '<div style="font-size:11px;color:var(--text-dim)">暂无活动</div>'}</div>
-      </div>
-    </div>`;
+    ${recent.length>0?'<div style="text-align:left;margin-top:12px;font-size:10px;">'+recent.map(f=>`<div class="feed-item ${f.type}" style="margin-top:4px"><span class="feed-time">${new Date(f.ts).toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'})}</span>${f.text}</div>`).join('')+'</div>':''}`;
+  document.getElementById('memberModal').classList.add('show');
 }
+function closeModal(){document.getElementById('memberModal').classList.remove('show');}
+document.getElementById('memberModal').onclick=e=>{if(e.target.classList.contains('modal-overlay'))closeModal();};
 
 // ── Message handling ──
-function handleMessage(msg) {
-  const ts = msg.ts || new Date().toISOString();
-  switch(msg.type) {
-    case 'catchup': (msg.messages||[]).forEach(m => handleMessage(m)); break;
-    case 'active_edits':
-      for (const [file,info] of Object.entries(msg.edits||{})) updateMember(info.editor,'editing',file);
-      break;
-    case 'joined': case 'join':
-      if (msg.name !== '🖥️ Dashboard') { updateMember(msg.name,'idle'); addFeed('join',`🟢 ${msg.name} 上线了`,ts); } break;
-    case 'left':
-      updateMember(msg.name,'sleep'); addFeed('join',`🔴 ${msg.name} 下线了`,ts); break;
-    case 'editing':
-      updateMember(msg.name,'editing',msg.file); addFeed('editing',`✏️ ${msg.name} → ${shortPath(msg.file)}`,ts); break;
-    case 'done_editing':
-      updateMember(msg.name,'idle'); break;
-    case 'decision':
-      addFeed('decision',`📋 ${msg.name}: ${msg.what}`,ts); break;
-    case 'experience':
-      addFeed('experience',`💡 ${msg.name}: ${msg.content}`,ts); break;
-    case 'conflict':
-      conflictCount++; addFeed('conflict',`⚠️ 冲突! ${msg.other_editor} 和 ${msg.name||'?'} 同时编辑 ${shortPath(msg.file)}`,ts); break;
-    case 'board':
-      addFeed('board',`📌 ${msg.name} ${msg.action}: ${msg.task?.content||''}`,ts); break;
-    case 'team_broadcast':
-      addFeed('decision',`📢 ${msg.name}: ${msg.content}`,ts); break;
+function handleMessage(msg){
+  const ts=msg.ts||new Date().toISOString();
+  switch(msg.type){
+    case'catchup':(msg.messages||[]).forEach(m=>handleMessage(m));break;
+    case'active_edits':for(const[f,i]of Object.entries(msg.edits||{}))updateMember(i.editor,'editing',f);break;
+    case'joined':case'join':if(msg.name!=='🖥️ Dashboard'){updateMember(msg.name,'idle');addFeed('join',`🟢 ${msg.name} 上线了`,ts);}break;
+    case'left':updateMember(msg.name,'sleep');addFeed('join',`🔴 ${msg.name} 下线了`,ts);break;
+    case'editing':updateMember(msg.name,'editing',msg.file);addFeed('editing',`✏️ ${msg.name} → ${shortPath(msg.file)}`,ts);break;
+    case'done_editing':updateMember(msg.name,'idle');break;
+    case'decision':addFeed('decision',`📋 ${msg.name}: ${msg.what}`,ts);break;
+    case'experience':addFeed('experience',`💡 ${msg.name}: ${msg.content}`,ts);break;
+    case'conflict':conflictCount++;addFeed('conflict',`⚠️ ${msg.other_editor} 和 ${msg.name||'?'} 冲突 ${shortPath(msg.file)}`,ts);break;
+    case'board':addFeed('board',`📌 ${msg.name} ${msg.action}: ${msg.task?.content||''}`,ts);break;
+    case'team_broadcast':addFeed('decision',`📢 ${msg.name}: ${msg.content}`,ts);break;
   }
-  renderMembers();
+  render();
 }
 
+// ── Theme ──
+function toggleTheme(){
+  document.body.classList.toggle('light');
+  localStorage.setItem('covibe-theme',document.body.classList.contains('light')?'light':'dark');
+}
+if(localStorage.getItem('covibe-theme')==='light')document.body.classList.add('light');
+
 // ── WebSocket ──
-function connect() {
-  try {
-    ws = new WebSocket(`ws://${wsHost}${token?'?token='+token:''}`);
-    ws.onopen = () => {
-      document.getElementById('connStatus').className='status-badge online';
-      document.getElementById('connStatus').querySelector('span').textContent='已连接';
-      ws.send(JSON.stringify({type:'join',name:'🖥️ Dashboard'}));
-    };
-    ws.onclose = () => {
-      document.getElementById('connStatus').className='status-badge offline';
-      document.getElementById('connStatus').querySelector('span').textContent='已断开';
-      setTimeout(connect, 3000);
-    };
-    ws.onmessage = e => { try { handleMessage(JSON.parse(e.data)); } catch{} };
-  } catch { setTimeout(connect, 3000); }
+function connect(){
+  try{
+    ws=new WebSocket(`ws://${wsHost}${token?'?token='+token:''}`);
+    ws.onopen=()=>{document.getElementById('connDot').className='conn-dot on';document.getElementById('connDot').title='已连接';ws.send(JSON.stringify({type:'join',name:'🖥️ Dashboard'}));};
+    ws.onclose=()=>{document.getElementById('connDot').className='conn-dot off';document.getElementById('connDot').title='已断开';setTimeout(connect,3000);};
+    ws.onmessage=e=>{try{handleMessage(JSON.parse(e.data));}catch{}};
+  }catch{setTimeout(connect,3000);}
 }
 
 // ── REST polling ──
-async function pollStatus() {
-  try {
-    const res = await fetch(`http://${wsHost}/status${token?'?token='+token:''}`);
-    const data = await res.json();
-    for (const [file,info] of Object.entries(data.active_edits||{})) updateMember(info.editor,'editing',file);
-    for (const name of (data.members||[])) { if(!members.has(name)) updateMember(name,'idle'); }
-    renderMembers();
-  } catch{}
-  try {
-    const res = await fetch(`http://${wsHost}/since?ts=${new Date(Date.now()-30000).toISOString()}${token?'&token='+token:''}`);
-    const data = await res.json();
-    for (const msg of (data.messages||[])) {
-      if (!feed.find(f => f.ts === msg.ts && f.text === msg.text)) handleMessage(msg);
-    }
-  } catch{}
-}
-
-// ── Theme toggle ──
-function toggleTheme() {
-  document.body.classList.toggle('light');
-  const isLight = document.body.classList.contains('light');
-  localStorage.setItem('covibe-theme', isLight ? 'light' : 'dark');
-  document.querySelector('.theme-toggle').textContent = isLight ? '🌙 暗色模式' : '☀️ 亮色模式';
-}
-// Restore saved theme
-if (localStorage.getItem('covibe-theme') === 'light') {
-  document.body.classList.add('light');
-  document.querySelector('.theme-toggle').textContent = '🌙 暗色模式';
+async function pollStatus(){
+  try{
+    const r=await fetch(`http://${wsHost}/status${token?'?token='+token:''}`);
+    const d=await r.json();
+    for(const[f,i]of Object.entries(d.active_edits||{}))updateMember(i.editor,'editing',f);
+    for(const n of(d.members||[]))if(!members.has(n))updateMember(n,'idle');
+    render();
+  }catch{}
+  try{
+    const r=await fetch(`http://${wsHost}/since?ts=${new Date(Date.now()-60000).toISOString()}${token?'&token='+token:''}`);
+    const d=await r.json();
+    for(const msg of(d.messages||[]))if(!feed.find(f=>f.ts===msg.ts))handleMessage(msg);
+  }catch{}
 }
 
 connect();
-setTimeout(pollStatus, 500);
-setTimeout(pollStatus, 2000);
-setInterval(pollStatus, 5000);
+setTimeout(pollStatus,500);
+setTimeout(pollStatus,2000);
+setInterval(pollStatus,5000);
 </script>
-</div><!-- page-wrapper -->
-</div><!-- app-layout -->
 </body>
 </html>
