@@ -16,6 +16,28 @@ covibe 让每个人的 AI 都知道队友在干什么、做了什么决策、踩
 npm install -g covibe
 ```
 
+### Claude Code 原生集成
+
+covibe 同时也是一个 **Claude Code Skill**，安装后在 Claude Code 对话中直接输入：
+
+```
+/covibe init          # AI 自动调用 covibe CLI 完成初始化
+/covibe audit         # AI 运行审计并给出改进建议
+/covibe board add     # AI 帮你添加任务到看板
+```
+
+所有 covibe 命令都能在 Claude Code 里通过 `/covibe` 直接调用，不用切换到终端。
+
+### Cursor / Windsurf 支持
+
+```bash
+covibe cross-ide cursor     # 自动从 CLAUDE.md 生成 .cursorrules
+covibe cross-ide windsurf   # 自动生成 .windsurfrules
+covibe cross-ide all        # 全部生成
+```
+
+团队成员用不同 IDE？没关系，covibe 保证规则一致。
+
 ## 30 秒上手
 
 ```bash
@@ -280,7 +302,7 @@ covibe sync start --allow-ips "192.168.1.100,192.168.1.101"
 
 ## 理论基础：Harness Engineering
 
-covibe 不只是一个协作工具——它建立在 **Harness Engineering（工作台工程）** 这套完整的方法论之上。
+covibe 不只是一个协作工具——它���立在 **Harness Engineering（工作台工程）** 这套完整的方法论之上。
 
 > **核心理念**：Harness 不是智能本身，而是释放智能的工具链。同一个 AI 模型，差的 harness 产出平庸结果，好的 harness 产出专家级结果。大多数 AI Agent 失败是 harness 失败，不是模型失败。
 

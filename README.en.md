@@ -16,6 +16,27 @@ covibe makes every person's AI aware of what teammates are doing, what decisions
 npm install -g covibe
 ```
 
+### Native IDE Integration
+
+**Claude Code** — covibe is a native Claude Code Skill. Type in your chat:
+```
+/covibe init          # AI calls covibe CLI automatically
+/covibe audit         # AI runs audit and suggests improvements
+/covibe board add     # AI adds tasks to shared board
+```
+
+**Cursor** — Auto-generate `.cursorrules` from your CLAUDE.md:
+```bash
+covibe cross-ide cursor
+```
+
+**Windsurf** — Auto-generate `.windsurfrules`:
+```bash
+covibe cross-ide windsurf
+```
+
+Different team members use different IDEs? No problem — covibe keeps rules consistent across all of them.
+
 ## Get Started in 30 Seconds
 
 ```bash
