@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>covibe — 一起 Vibe Coding</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0a0f;--surface:#12121a;--border:#1e1e2e;--text:#e8e8ef;--dim:#888;--accent:#7c5bf5;--accent2:#60a5fa;--green:#4ade80;--yellow:#facc15;--red:#f87171}
+body{font-family:'SF Mono','JetBrains Mono','Fira Code',monospace;background:var(--bg);color:var(--text);overflow-x:hidden}
+a{color:var(--accent2);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* Hero */
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 20px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;width:600px;height:600px;background:radial-gradient(circle,rgba(124,91,245,0.15),transparent 70%);top:-100px;left:50%;transform:translateX(-50%);pointer-events:none}
+.hero-mascot{width:120px;height:120px;image-rendering:pixelated;margin-bottom:24px;filter:drop-shadow(0 0 20px rgba(124,91,245,0.4))}
+.hero-title{font-size:clamp(48px,8vw,80px);font-weight:800;background:linear-gradient(135deg,#7c5bf5 0%,#60a5fa 50%,#4ade80 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-size:200% 200%;animation:gradient 4s ease infinite;line-height:1.1}
+@keyframes gradient{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+.hero-sub{font-size:clamp(16px,2.5vw,22px);color:var(--dim);margin:16px 0 8px;font-weight:400}
+.hero-desc{font-size:14px;color:var(--dim);max-width:560px;line-height:1.7;margin-bottom:32px}
+.hero-desc em{color:var(--text);font-style:normal;font-weight:600}
+.hero-actions{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+.btn{padding:12px 28px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;border:none;font-family:inherit}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(124,91,245,0.4)}
+.btn-ghost{background:transparent;color:var(--text);border:1px solid var(--border)}
+.btn-ghost:hover{border-color:var(--accent);background:rgba(124,91,245,0.1)}
+.install-cmd{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 24px;font-size:14px;margin:24px 0;display:inline-flex;align-items:center;gap:12px}
+.install-cmd code{color:var(--green)}
+.install-cmd .copy{cursor:pointer;color:var(--dim);transition:color .2s}
+.install-cmd .copy:hover{color:var(--text)}
+
+/* Section */
+section{padding:80px 20px;max-width:1100px;margin:0 auto}
+.section-label{font-size:12px;text-transform:uppercase;letter-spacing:2px;color:var(--accent);margin-bottom:8px}
+.section-title{font-size:clamp(28px,4vw,40px);font-weight:700;margin-bottom:12px}
+.section-desc{font-size:14px;color:var(--dim);max-width:600px;line-height:1.7;margin-bottom:40px}
+
+/* Problem/Solution */
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:40px}
+.compare-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px}
+.compare-card h3{font-size:16px;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.compare-card ul{list-style:none;display:flex;flex-direction:column;gap:10px}
+.compare-card li{font-size:13px;line-height:1.6;padding-left:20px;position:relative}
+.compare-card li::before{content:'';position:absolute;left:0;top:7px;width:8px;height:8px;border-radius:50%}
+.bad li::before{background:var(--red)}
+.good li::before{background:var(--green)}
+
+/* Features */
+.features{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
+.feature{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;transition:all .3s}
+.feature:hover{border-color:var(--accent);transform:translateY(-3px);box-shadow:0 12px 32px rgba(124,91,245,0.15)}
+.feature-icon{font-size:28px;margin-bottom:10px}
+.feature h3{font-size:15px;font-weight:600;margin-bottom:6px}
+.feature p{font-size:12px;color:var(--dim);line-height:1.6}
+.feature code{font-size:11px;background:rgba(124,91,245,0.15);color:var(--accent);padding:1px 6px;border-radius:4px}
+
+/* Code block */
+.code-block{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin:24px 0;overflow-x:auto}
+.code-block pre{font-size:13px;line-height:1.8}
+.code-block .comment{color:var(--dim)}
+.code-block .cmd{color:var(--green)}
+.code-block .flag{color:var(--accent2)}
+
+/* Dashboard preview */
+.preview{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;margin:40px 0;display:flex;align-items:center;gap:32px;flex-wrap:wrap;justify-content:center}
+.preview-mascots{display:flex;gap:16px}
+.preview-mascot{text-align:center}
+.preview-mascot img{width:80px;height:80px;image-rendering:pixelated;filter:drop-shadow(0 0 12px rgba(124,91,245,0.3))}
+.preview-mascot .name{font-size:11px;margin-top:6px;color:var(--dim)}
+.preview-mascot .status{font-size:10px;color:var(--green)}
+.preview-text{flex:1;min-width:200px}
+.preview-text h3{font-size:18px;margin-bottom:8px}
+.preview-text p{font-size:13px;color:var(--dim);line-height:1.7}
+
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:40px 0}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center}
+.stat .num{font-size:36px;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.stat .label{font-size:11px;color:var(--dim);margin-top:4px}
+
+/* Footer */
+footer{border-top:1px solid var(--border);padding:40px 20px;text-align:center}
+footer p{font-size:12px;color:var(--dim);line-height:2}
+footer a{color:var(--accent)}
+
+/* Responsive */
+@media(max-width:768px){
+  .compare{grid-template-columns:1fr}
+  .stats{grid-template-columns:1fr 1fr}
+  .preview{flex-direction:column;text-align:center}
+}
+</style>
+</head>
+<body>
+
+<!-- Hero -->
+<div class="hero">
+  <img src="../dashboard/assets/clawd-idle.gif" class="hero-mascot" alt="covibe mascot">
+  <h1 class="hero-title">covibe</h1>
+  <p class="hero-sub">一起 Vibe Coding — Co-Vibe Together</p>
+  <p class="hero-desc">
+    一群人，各自带着自己的 AI，一起 vibe coding。<br>
+    covibe 让<em>每个人的 AI 都知道队友在干什么</em>、做了什么决策、踩了什么坑。
+  </p>
+  <div class="install-cmd">
+    <code>npm install -g covibe</code>
+    <span class="copy" onclick="navigator.clipboard.writeText('npm install -g covibe');this.textContent='✓ copied';setTimeout(()=>this.textContent='📋',1500)">📋</span>
+  </div>
+  <div class="hero-actions">
+    <a href="https://github.com/lidpeng/covibe" class="btn btn-primary">⭐ GitHub</a>
+    <a href="#features" class="btn btn-ghost">功能一览 →</a>
+  </div>
+</div>
+
+<!-- Problem / Solution -->
+<section>
+  <div class="section-label">为什么需要 covibe</div>
+  <h2 class="section-title">多人 Vibe Coding 的协作困境</h2>
+  <p class="section-desc">AI 编程助手让每个人效率翻倍，但团队协作的问题反而更严重了。</p>
+  
+  <div class="compare">
+    <div class="compare-card bad">
+      <h3>😰 没有 covibe</h3>
+      <ul>
+        <li>Alice 让 AI 删了手机号验证，Bob 不知道又加回来</li>
+        <li>Bob 踩坑花 3 小时，下周 Charlie 又踩一遍</li>
+        <li>新人打开项目，AI 一头雾水</li>
+        <li>两人同时改一个文件，合并时一堆冲突</li>
+        <li>每个人的 AI 配置不一样，质量参差不齐</li>
+      </ul>
+    </div>
+    <div class="compare-card good">
+      <h3>🎵 有 covibe</h3>
+      <ul>
+        <li>编辑同一文件时实时预警，避免冲突</li>
+        <li>踩坑经验自动记录，自动提醒下一个人</li>
+        <li>新人一条命令就能上手整个项目</li>
+        <li>团队规则自动同步到每个人的 AI</li>
+        <li>AI 分析代码库和成员画像，智能分工</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- Dashboard Preview -->
+<section>
+  <div class="preview">
+    <div class="preview-mascots">
+      <div class="preview-mascot"><img src="../dashboard/assets/clawd-typing.gif" alt="typing"><div class="name">Alice</div><div class="status">正在编辑</div></div>
+      <div class="preview-mascot"><img src="../dashboard/assets/clawd-thinking.gif" alt="thinking"><div class="name">Bob</div><div class="status">思考中</div></div>
+      <div class="preview-mascot"><img src="../dashboard/assets/clawd-idle.gif" alt="idle"><div class="name">Charlie</div><div class="status">空闲</div></div>
+      <div class="preview-mascot"><img src="../dashboard/assets/clawd-happy.gif" alt="done"><div class="name">David</div><div class="status">完成！</div></div>
+    </div>
+    <div class="preview-text">
+      <h3>🖥️ 实时 Dashboard</h3>
+      <p>每个团队成员用一个像素小人表示实时状态。正在编辑、思考、完成、阻塞 — 一目了然。<br><br>
+      <code>covibe dashboard</code> 启动 → 浏览器打开即看。</p>
+    </div>
+  </div>
+</section>
+
+<!-- Features -->
+<section id="features">
+  <div class="section-label">全部功能</div>
+  <h2 class="section-title">为 Vibe Coding 打造的完整工具链</h2>
+  <p class="section-desc">从一个人到一个团队，从初始化到持续协作。</p>
+  
+  <div class="features">
+    <div class="feature"><div class="feature-icon">🔍</div><h3>一键初始化</h3><p>自动探测技术栈（Node/Python/Go/Rust/全栈），生成 CLAUDE.md + 配置 + 工作流。<br><code>covibe init</code></p></div>
+    <div class="feature"><div class="feature-icon">📊</div><h3>100 分制审计</h3><p>14 项检查覆盖知识、工具、权限、记忆、质量、团队六个维度。<br><code>covibe audit</code></p></div>
+    <div class="feature"><div class="feature-icon">🔗</div><h3>P2P 实时同步</h3><p>团队任一成员电脑上启动 sync server，零额外基建。内网 WebSocket 实时同步。<br><code>covibe sync start</code></p></div>
+    <div class="feature"><div class="feature-icon">📋</div><h3>共同任务看板</h3><p>团队共享看板，每个人的 AI 都能看到、更新。<br><code>covibe board add "任务"</code></p></div>
+    <div class="feature"><div class="feature-icon">💡</div><h3>共享经验板</h3><p>零基建的团队知识库，踩过的坑自动提醒下一个人。支持点赞和自动归档。<br><code>covibe experience add</code></p></div>
+    <div class="feature"><div class="feature-icon">🎯</div><h3>Agent 智能分工</h3><p>基于 git blame + 成员画像，AI 推荐最优任务分配方案。<br><code>covibe coordinate "任务"</code></p></div>
+    <div class="feature"><div class="feature-icon">👤</div><h3>自动成员画像</h3><p>从 git 历史分析技能、活跃模块、工作时间，一键生成。<br><code>covibe profile-gen</code></p></div>
+    <div class="feature"><div class="feature-icon">🔑</div><h3>Token 认证</h3><p>团队初始化自动生成 token，sync 连接自动校验。通过 Git 分发，无需手动配置。</p></div>
+    <div class="feature"><div class="feature-icon">🌐</div><h3>跨 IDE 支持</h3><p>从 CLAUDE.md 自动生成 Cursor Rules 和 Windsurf Rules。<br><code>covibe cross-ide all</code></p></div>
+  </div>
+</section>
+
+<!-- Quick Start -->
+<section>
+  <div class="section-label">快速开始</div>
+  <h2 class="section-title">30 秒上手</h2>
+  
+  <div class="code-block"><pre><span class="comment"># 安装</span>
+<span class="cmd">npm install -g covibe</span>
+
+<span class="comment"># 在你的项目中</span>
+<span class="cmd">cd</span> your-project
+<span class="cmd">covibe init</span>           <span class="comment"># 自动探测 → 一键生成完整 AI 工作环境</span>
+<span class="cmd">covibe audit</span>          <span class="comment"># 看看健康度几分</span>
+
+<span class="comment"># 开启团队模式</span>
+<span class="cmd">covibe team init</span>      <span class="comment"># 创建团队配置 + 生成 token</span>
+<span class="cmd">covibe sync start</span>     <span class="comment"># 启动实时同步</span>
+<span class="cmd">covibe dashboard</span>      <span class="comment"># 打开 Web Dashboard 看像素小人</span>
+
+<span class="comment"># 日常使用</span>
+<span class="cmd">covibe board add</span> <span class="flag">"实现用户登录"</span>
+<span class="cmd">covibe board vibe</span> <span class="flag">1</span>
+<span class="cmd">covibe experience add</span> <span class="flag">"Redis 连接池不超过 50"</span> <span class="flag">--category performance</span></pre></div>
+</section>
+
+<!-- Stats -->
+<section>
+  <div class="stats">
+    <div class="stat"><div class="num">0</div><div class="label">npm 依赖</div></div>
+    <div class="stat"><div class="num">13</div><div class="label">CLI 命令</div></div>
+    <div class="stat"><div class="num">10</div><div class="label">模板类型</div></div>
+    <div class="stat"><div class="num">6</div><div class="label">支持的语言</div></div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <p>🎵 <strong>covibe</strong> — Co-Vibe, 一起 vibe coding</p>
+  <p>MIT License · <a href="https://github.com/lidpeng/covibe">GitHub</a> · <a href="https://www.npmjs.com/package/covibe">npm</a></p>
+  <p style="margin-top:12px;font-size:11px">致谢: <a href="https://github.com/shareAI-lab/learn-claude-code">learn-claude-code</a> · <a href="https://github.com/lazyFrogLOL/Harness_Engineering">Harness_Engineering</a> · <a href="https://github.com/Disrush/teamvibe">teamvibe</a> · <a href="https://github.com/Yeachan-Heo/oh-my-claudecode">oh-my-claudecode</a> · <a href="https://github.com/anthropics/clawd-on-desk">clawd-on-desk</a></p>
+</footer>
+
+</body>
+</html>
