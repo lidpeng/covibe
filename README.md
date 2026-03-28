@@ -278,11 +278,51 @@ covibe sync start --allow-ips "192.168.1.100,192.168.1.101"
 
 ---
 
-## 设计理念
+## 理论基础：Harness Engineering
 
-**Harness 三轴模型**：工具（行动能力）× 知识（认知能力）× 权限（行为边界）
+covibe 不只是一个协作工具——它建立在 **Harness Engineering（工作台工程）** 这套完整的方法论之上。
 
-**八大模式**：宪法模式、记忆分层、证据门禁、钩子守卫、Harness-First、决策保护、共享经验板、Agent 智能分工
+> **核心理念**：Harness 不是智能本身，而是释放智能的工具链。同一个 AI 模型，差的 harness 产出平庸结果，好的 harness 产出专家级结果。大多数 AI Agent 失败是 harness 失败，不是模型失败。
+
+### 三轴模型
+
+covibe 围绕三个核心轴构建 AI 的工作环境：
+
+| 轴 | 组成 | covibe 如何实现 |
+|---|------|----------------|
+| **工具 (Tools)** | MCP Servers、Shell 权限、CLI | `covibe init` 自动配置工具链 |
+| **知识 (Knowledge)** | CLAUDE.md、经验板、记忆系统 | `covibe experience` 团队知识沉淀 |
+| **权限 (Permissions)** | Hooks、团队规范、沙箱 | `harness.team.json` 三级规则分离 |
+
+### 八大设计模式
+
+| # | 模式 | 说明 | covibe 命令 |
+|---|------|------|------------|
+| 1 | **宪法模式** | CLAUDE.md 作为 AI 的结构化"宪法" | `covibe init` 自动生成 |
+| 2 | **记忆分层** | L1 工作记忆 / L2 项目记忆 / L3 全局记忆 | 经验板 + 项目配置 + 全局 skill |
+| 3 | **证据门禁** | 完成前必须提供可验证证据 | `covibe audit` 审计检查 |
+| 4 | **钩子守卫** | Pre/Post/Stop hooks 运行时守卫 | sync-hook.sh 自动注入 |
+| 5 | **Harness-First** | 先建工作台，再做实际工作 | `covibe init` → 先建再写 |
+| 6 | **决策保护** | 人工决策 / AI 建议分级保护 | sync server 决策广播 |
+| 7 | **共享经验板** | 零基建团队经验复用 | `covibe experience` |
+| 8 | **Agent 智能分工** | 画像 + git blame 匹配 | `covibe coordinate` |
+
+### 内置模板库
+
+covibe 内置 10 种 Harness Engineering 模板，随时查阅：
+
+```bash
+covibe template claude-md      # CLAUDE.md 宪法模板
+covibe template hooks          # 7 种 Hook 守卫模式
+covibe template skill          # Skill 开发模板
+covibe template workflow       # 开发工作流模板（4 种项目类型）
+covibe template audit          # 审计检查清单（100 分制）
+covibe template team           # 团队协作配置 + setup-dev.sh
+covibe template experience     # 共享经验板设计
+covibe template coordinator    # Agent 分工协调
+covibe template sync           # P2P 实时同步文档
+covibe template auto-detect    # 自动探测规则
+```
 
 ## 致谢
 

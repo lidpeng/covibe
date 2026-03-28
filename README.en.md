@@ -207,11 +207,43 @@ Auto-detection engine supports:
 
 ---
 
-## Design Philosophy
+## Foundation: Harness Engineering
 
-**Harness Three-Axis Model**: Tools (action capability) × Knowledge (cognitive capability) × Permissions (behavioral boundaries)
+covibe is more than a collaboration tool — it's built on **Harness Engineering**, a methodology for constructing AI agent work environments.
 
-**Eight Patterns**: Constitution, Memory Layering, Evidence Gate, Hook Guard, Harness-First, Decision Protection, Shared Experience Board, AI Task Coordination
+> **Core insight**: A harness is not intelligence itself — it's the toolchain that unleashes intelligence. Same model, poor harness → mediocre results. Same model, great harness → expert-level results.
+
+### Three-Axis Model
+
+| Axis | Components | How covibe implements it |
+|------|-----------|------------------------|
+| **Tools** | MCP Servers, Shell, CLI | `covibe init` auto-configures |
+| **Knowledge** | CLAUDE.md, experiences, memory | `covibe experience` for team knowledge |
+| **Permissions** | Hooks, team rules, sandbox | `harness.team.json` three-tier rules |
+
+### Eight Design Patterns
+
+| # | Pattern | Description |
+|---|---------|-------------|
+| 1 | **Constitution** | CLAUDE.md as structured AI "constitution" |
+| 2 | **Memory Layering** | L1 working / L2 project / L3 global |
+| 3 | **Evidence Gate** | Verifiable evidence before claiming done |
+| 4 | **Hook Guard** | Pre/Post/Stop runtime guardrails |
+| 5 | **Harness-First** | Build workbench before writing code |
+| 6 | **Decision Protection** | Human vs AI decisions — tiered protection |
+| 7 | **Experience Board** | Zero-infra team knowledge reuse |
+| 8 | **AI Coordination** | Profile + git blame task matching |
+
+### 10 Built-in Templates
+
+```bash
+covibe template claude-md      # CLAUDE.md constitution
+covibe template hooks          # 7 hook guard patterns
+covibe template workflow       # Dev workflow (4 project types)
+covibe template audit          # 100-point audit checklist
+covibe template team           # Team config + setup script
+# ... and 5 more
+```
 
 ---
 
