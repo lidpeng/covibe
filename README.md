@@ -10,6 +10,8 @@
 一群人，各自带着自己的 AI，一起 vibe coding。
 covibe 让每个人的 AI 都知道队友在干什么、做了什么决策、踩了什么坑。
 
+![covibe 首页截图](docs/main_page.png)
+
 ## 安装
 
 ```bash

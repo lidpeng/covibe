@@ -10,6 +10,8 @@
 A group of people, each with their own AI, vibe coding together.
 covibe makes every person's AI aware of what teammates are doing, what decisions they've made, and what pitfalls they've encountered.
 
+![covibe Dashboard Screenshot](docs/main_page.png)
+
 ## Install
 
 ```bash
