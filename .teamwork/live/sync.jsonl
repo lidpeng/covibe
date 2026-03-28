@@ -19,3 +19,12 @@
 {"type":"editing","name":"Bob","file":"backend/app/services/auth.py","ts":"2026-03-28T08:52:55.851Z","source":"http","server_ts":"2026-03-28T08:52:55.851Z"}
 {"type":"decision","name":"Alice","what":"登录页改为圆角按钮","ts":"2026-03-28T08:52:55.876Z","source":"http","server_ts":"2026-03-28T08:52:55.877Z"}
 {"type":"experience","name":"Bob","content":"Redis连接池不超过50","category":"performance","ts":"2026-03-28T08:52:55.905Z","source":"http","server_ts":"2026-03-28T08:52:55.905Z"}
+{"type":"joined","name":"Alice","ts":"2026-03-28T08:55:18.133Z","source":"http","server_ts":"2026-03-28T08:55:18.137Z"}
+{"type":"joined","name":"Bob","ts":"2026-03-28T08:55:18.159Z","source":"http","server_ts":"2026-03-28T08:55:18.159Z"}
+{"type":"joined","name":"Charlie","ts":"2026-03-28T08:55:18.183Z","source":"http","server_ts":"2026-03-28T08:55:18.183Z"}
+{"type":"joined","name":"David","ts":"2026-03-28T08:55:18.206Z","source":"http","server_ts":"2026-03-28T08:55:18.207Z"}
+{"type":"editing","name":"Alice","file":"frontend/src/pages/Dashboard.tsx","ts":"2026-03-28T08:55:18.228Z","source":"http","server_ts":"2026-03-28T08:55:18.229Z"}
+{"type":"editing","name":"Bob","file":"backend/app/services/auth.py","ts":"2026-03-28T08:55:18.249Z","source":"http","server_ts":"2026-03-28T08:55:18.249Z"}
+{"type":"decision","name":"Alice","what":"登录页改为圆角按钮","ts":"2026-03-28T08:55:18.277Z","source":"http","server_ts":"2026-03-28T08:55:18.277Z"}
+{"type":"experience","name":"Bob","content":"Redis连接池不超过50","category":"performance","ts":"2026-03-28T08:55:18.300Z","source":"http","server_ts":"2026-03-28T08:55:18.301Z"}
+{"type":"team_broadcast","name":"CI-Bot","content":"main 分支构建通过 ✅","ts":"2026-03-28T08:55:18.326Z","source":"http","server_ts":"2026-03-28T08:55:18.326Z"}
