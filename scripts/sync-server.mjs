@@ -39,10 +39,15 @@ function getArg(name, defaultVal) {
 }
 
 // ── 状态 ──
-const clients = new Map();       // ws -> { name, joinedAt }
+const clients = new Map();       // ws -> { name, joinedAt, lastActivity }
 const activeEdits = new Map();   // filePath -> { editor, since }
+const memberNames = new Set();   // O(1) member name lookup
+const httpMembers = new Map();   // name -> { socket, joinedAt, lastActivity } (HTTP broadcast virtual members)
 const recentMessages = [];       // 最近 100 条消息（新成员 catch-up）
 const MAX_RECENT = 100;
+const MAX_FRAME_SIZE = 1 * 1024 * 1024;   // 1 MB WebSocket frame limit
+const MAX_POST_BODY = 100 * 1024;         // 100 KB POST body limit
+const HEARTBEAT_TIMEOUT_MS = 2 * 60 * 1000; // 2 minutes idle timeout
 
 // ── 日志 ──
 function logSync(msg) {
@@ -87,6 +92,10 @@ function decodeFrame(buffer) {
   } else if (payloadLen === 127) {
     payloadLen = Number(buffer.readBigUInt64BE(2));
     offset = 10;
+  }
+
+  if (payloadLen > MAX_FRAME_SIZE) {
+    return { opcode: 0x08, data: '', oversized: true };
   }
 
   let mask = null;
@@ -154,13 +163,15 @@ function handleMessage(socket, raw) {
   try { msg = JSON.parse(raw); } catch { return; }
 
   const client = clients.get(socket);
+  if (client) client.lastActivity = Date.now();
   const ts = new Date().toISOString();
 
   switch (msg.type) {
     case 'join': {
-      clients.set(socket, { name: msg.name, joinedAt: ts });
-      // 发送当前在线成员列表
-      const members = [...clients.values()].map(c => c.name);
+      clients.set(socket, { name: msg.name, joinedAt: ts, lastActivity: Date.now() });
+      memberNames.add(msg.name);
+      // 发送当前在线成员列表 (WS + HTTP members combined)
+      const members = [...memberNames];
       send(socket, { type: 'members', members, project: PROJECT });
       // 发送最近消息用于 catch-up
       send(socket, { type: 'catchup', messages: recentMessages.slice(-20) });
@@ -254,6 +265,7 @@ function handleMessage(socket, raw) {
     }
 
     case 'heartbeat': {
+      if (client) client.lastActivity = Date.now();
       send(socket, { type: 'heartbeat_ack', ts });
       break;
     }
@@ -269,28 +281,26 @@ const server = createServer((req, res) => {
   if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
 
   // Token 校验中间件
-  if (TOKEN) {
+  const pathname = new URL(req.url, `http://localhost:${PORT}`).pathname;
+  if (TOKEN && pathname !== '/') {
     const authHeader = req.headers['x-covibe-token'] || new URL(req.url, `http://localhost:${PORT}`).searchParams.get('token');
     if (authHeader !== TOKEN && req.headers.upgrade?.toLowerCase() !== 'websocket') {
-      // REST API 需要 token
-      if (req.url !== '/' && !req.url.startsWith('/?')) {
-        res.writeHead(401, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: '🔒 Token 不对哦～请检查 HARNESS_SYNC_TOKEN' }));
-        return;
-      }
+      res.writeHead(401, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: '🔒 Token 不对哦～请检查 HARNESS_SYNC_TOKEN' }));
+      return;
     }
   }
 
   // REST API 端点（给 Hook 用 curl 调用）
-  if (req.method === 'GET' && req.url === '/status') {
-    const members = [...clients.values()].map(c => c.name);
+  if (req.method === 'GET' && pathname === '/status') {
+    const members = [...memberNames];
     const edits = Object.fromEntries(activeEdits);
     res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ project: PROJECT, members, active_edits: edits, online: clients.size }));
+    res.end(JSON.stringify({ project: PROJECT, members, active_edits: edits, online: members.length }));
     return;
   }
 
-  if (req.method === 'GET' && req.url?.startsWith('/since')) {
+  if (req.method === 'GET' && pathname === '/since') {
     const url = new URL(req.url, `http://localhost:${PORT}`);
     const since = url.searchParams.get('ts') || '';
     const msgs = recentMessages.filter(m => !since || m.ts > since);
@@ -299,10 +309,21 @@ const server = createServer((req, res) => {
     return;
   }
 
-  if (req.method === 'POST' && req.url === '/broadcast') {
+  if (req.method === 'POST' && pathname === '/broadcast') {
     let body = '';
-    req.on('data', chunk => body += chunk);
+    let bodySize = 0;
+    req.on('data', chunk => {
+      bodySize += chunk.length;
+      if (bodySize > MAX_POST_BODY) {
+        res.writeHead(413, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Request body exceeds 100KB limit' }));
+        req.destroy();
+        return;
+      }
+      body += chunk;
+    });
     req.on('end', () => {
+      if (bodySize > MAX_POST_BODY) return; // already responded 413
       try {
         const msg = JSON.parse(body);
         const ts = new Date().toISOString();
@@ -315,13 +336,20 @@ const server = createServer((req, res) => {
           activeEdits.delete(msg.file);
         }
         if (msg.type === 'joined' && msg.name) {
-          // 用 null socket 占位，表示通过 HTTP 广播的虚拟成员
-          if (![...clients.values()].find(c => c.name === msg.name)) {
-            clients.set({ _http: msg.name }, { name: msg.name, joinedAt: ts });
+          // Track HTTP-broadcast virtual members in a separate Map with TTL
+          if (!memberNames.has(msg.name)) {
+            httpMembers.set(msg.name, { joinedAt: ts, lastActivity: Date.now() });
+            memberNames.add(msg.name);
+          } else if (httpMembers.has(msg.name)) {
+            httpMembers.get(msg.name).lastActivity = Date.now();
           }
         }
         if (msg.type === 'left' && msg.name) {
+          // Clean up from httpMembers
+          httpMembers.delete(msg.name);
+          // Clean up from WS clients
           for (const [s, c] of clients) { if (c.name === msg.name) { clients.delete(s); break; } }
+          memberNames.delete(msg.name);
           for (const [f, e] of activeEdits) { if (e.editor === msg.name) activeEdits.delete(f); }
         }
         broadcastAll(full);
@@ -380,6 +408,15 @@ server.on('upgrade', (req, socket) => {
       if (buffer.length < frameLen) break;
       buffer = buffer.slice(frameLen);
 
+      if (frame.oversized) { // payload exceeds MAX_FRAME_SIZE
+        const closeFrame = Buffer.alloc(4);
+        closeFrame[0] = 0x88; // close frame, FIN
+        closeFrame[1] = 2;    // payload length: 2 bytes for status code
+        closeFrame.writeUInt16BE(1009, 2); // 1009 = Message Too Big
+        try { socket.write(closeFrame); } catch {}
+        socket.end();
+        return;
+      }
       if (frame.opcode === 0x08) { // close
         socket.end();
         return;
@@ -401,6 +438,10 @@ server.on('upgrade', (req, socket) => {
       for (const [file, edit] of activeEdits) {
         if (edit.editor === client.name) activeEdits.delete(file);
       }
+      // Remove from memberNames only if no httpMember with same name exists
+      if (!httpMembers.has(client.name)) {
+        memberNames.delete(client.name);
+      }
       broadcastAll({ type: 'left', name: client.name, ts: new Date().toISOString() });
       console.log(`- ${client.name} left (${clients.size - 1} online)`);
     }
@@ -411,6 +452,46 @@ server.on('upgrade', (req, socket) => {
     clients.delete(socket);
   });
 });
+
+// ── 心跳超时 & HTTP 成员 TTL 清理 ──
+const HEARTBEAT_INTERVAL = setInterval(() => {
+  const now = Date.now();
+
+  // Clean up idle WebSocket connections (no activity for > 2 minutes)
+  for (const [socket, client] of clients) {
+    if (client.lastActivity && (now - client.lastActivity) > HEARTBEAT_TIMEOUT_MS) {
+      console.log(`⏰ ${client.name} timed out (idle > 2min)`);
+      // Clean up their activeEdits
+      for (const [file, edit] of activeEdits) {
+        if (edit.editor === client.name) activeEdits.delete(file);
+      }
+      if (!httpMembers.has(client.name)) {
+        memberNames.delete(client.name);
+      }
+      broadcastAll({ type: 'left', name: client.name, ts: new Date().toISOString(), reason: 'timeout' });
+      clients.delete(socket);
+      try { socket.end(); } catch {}
+    }
+  }
+
+  // Clean up stale HTTP virtual members (same TTL)
+  for (const [name, info] of httpMembers) {
+    if ((now - info.lastActivity) > HEARTBEAT_TIMEOUT_MS) {
+      console.log(`⏰ HTTP member ${name} expired (idle > 2min)`);
+      httpMembers.delete(name);
+      // Only remove from memberNames if no WS client has this name
+      const hasWsClient = [...clients.values()].some(c => c.name === name);
+      if (!hasWsClient) {
+        memberNames.delete(name);
+      }
+      for (const [file, edit] of activeEdits) {
+        if (edit.editor === name) activeEdits.delete(file);
+      }
+      broadcastAll({ type: 'left', name, ts: new Date().toISOString(), reason: 'timeout' });
+    }
+  }
+}, 30_000); // check every 30 seconds
+HEARTBEAT_INTERVAL.unref(); // don't prevent process from exiting
 
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`
