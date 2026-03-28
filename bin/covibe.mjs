@@ -161,6 +161,11 @@ async function main() {
         await profileGen(process.cwd(), args);
         break;
       }
+      case 'suggest': {
+        const { suggest } = await import(resolve(ROOT, 'lib/suggest.mjs'));
+        await suggest(process.cwd(), args[0], args.slice(1));
+        break;
+      }
       case 'template': {
         const type = args[0];
         const map = {
