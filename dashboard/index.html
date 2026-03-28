@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>covibe — 团队 Vibe Dashboard</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  :root {
+    --bg: #0a0a0f;
+    --card-bg: #12121a;
+    --card-border: #1e1e2e;
+    --text: #e0e0e0;
+    --text-dim: #888;
+    --accent: #7c5bf5;
+    --accent-glow: rgba(124, 91, 245, 0.3);
+    --green: #4ade80;
+    --yellow: #facc15;
+    --red: #f87171;
+    --blue: #60a5fa;
+  }
+
+  body {
+    font-family: 'SF Mono', 'JetBrains Mono', 'Fira Code', monospace;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 32px;
+    border-bottom: 1px solid var(--card-border);
+    background: linear-gradient(180deg, #12121a 0%, var(--bg) 100%);
+  }
+  .header-left { display: flex; align-items: center; gap: 16px; }
+  .logo { font-size: 28px; font-weight: 700; background: linear-gradient(135deg, #7c5bf5, #60a5fa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .logo-sub { font-size: 12px; color: var(--text-dim); }
+  .status-badge { display: flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 20px; font-size: 12px; }
+  .status-badge.online { background: rgba(74, 222, 128, 0.15); color: var(--green); }
+  .status-badge.offline { background: rgba(248, 113, 113, 0.15); color: var(--red); }
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; animation: pulse 2s infinite; }
+  .online .status-dot { background: var(--green); }
+  .offline .status-dot { background: var(--red); }
+
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+  /* Main Grid */
+  .main { padding: 24px 32px; display: grid; grid-template-columns: 1fr 340px; gap: 24px; min-height: calc(100vh - 80px); }
+
+  /* Team Panel */
+  .team-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; align-content: start; }
+
+  .member-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 16px;
+    text-align: center;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .member-card:hover { border-color: var(--accent); box-shadow: 0 0 20px var(--accent-glow); transform: translateY(-2px); }
+  .member-card.vibing { border-color: var(--green); }
+  .member-card.blocked { border-color: var(--red); }
+  .member-card.idle { border-color: var(--card-border); }
+
+  .member-avatar {
+    width: 100px;
+    height: 100px;
+    margin: 0 auto 12px;
+    image-rendering: pixelated;
+  }
+  .member-avatar img { width: 100%; height: 100%; object-fit: contain; }
+
+  .member-name { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .member-status { font-size: 11px; color: var(--text-dim); margin-bottom: 8px; }
+  .member-file { font-size: 10px; color: var(--accent); background: rgba(124, 91, 245, 0.1); padding: 3px 8px; border-radius: 8px; display: inline-block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* Activity Feed */
+  .sidebar { display: flex; flex-direction: column; gap: 16px; }
+  .panel { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; padding: 16px; }
+  .panel-title { font-size: 13px; font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+
+  .feed { max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+  .feed-item { font-size: 11px; padding: 8px; border-radius: 8px; background: rgba(255,255,255,0.03); border-left: 3px solid var(--card-border); }
+  .feed-item.editing { border-left-color: var(--yellow); }
+  .feed-item.decision { border-left-color: var(--accent); }
+  .feed-item.experience { border-left-color: var(--green); }
+  .feed-item.conflict { border-left-color: var(--red); }
+  .feed-item.board { border-left-color: var(--blue); }
+  .feed-time { color: var(--text-dim); font-size: 10px; }
+  .feed-name { color: var(--accent); font-weight: 600; }
+
+  /* Board mini */
+  .board-list { display: flex; flex-direction: column; gap: 6px; max-height: 200px; overflow-y: auto; }
+  .board-item { font-size: 11px; padding: 6px 8px; border-radius: 6px; background: rgba(255,255,255,0.03); display: flex; align-items: center; gap: 6px; }
+  .board-status { font-size: 13px; }
+
+  /* Empty state */
+  .empty { text-align: center; padding: 40px; color: var(--text-dim); }
+  .empty-gif { width: 120px; margin-bottom: 16px; image-rendering: pixelated; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div>
+      <div class="logo">🎵 covibe</div>
+      <div class="logo-sub">团队 Vibe Dashboard</div>
+    </div>
+  </div>
+  <div id="connStatus" class="status-badge offline">
+    <div class="status-dot"></div>
+    <span>连接中...</span>
+  </div>
+</div>
+
+<div class="main">
+  <div>
+    <div id="teamGrid" class="team-grid">
+      <div class="empty">
+        <img src="assets/clawd-idle.gif" class="empty-gif" alt="waiting">
+        <p>等待团队成员上线...</p>
+        <p style="font-size:11px; margin-top:8px;">启动 covibe sync start 后刷新页面</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="sidebar">
+    <div class="panel">
+      <div class="panel-title">📋 任务看板</div>
+      <div id="boardList" class="board-list">
+        <div style="font-size:11px; color:var(--text-dim);">暂无任务</div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">⚡ 实时动态</div>
+      <div id="activityFeed" class="feed">
+        <div style="font-size:11px; color:var(--text-dim);">等待活动...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const STATE_MAP = {
+  editing: { gif: 'clawd-typing.gif', label: '正在编辑', cls: 'vibing' },
+  vibing: { gif: 'clawd-typing.gif', label: '正在 vibing', cls: 'vibing' },
+  thinking: { gif: 'clawd-thinking.gif', label: '思考中', cls: 'vibing' },
+  building: { gif: 'clawd-building.gif', label: '构建中', cls: 'vibing' },
+  reviewing: { gif: 'clawd-juggling.gif', label: 'Review 中', cls: 'vibing' },
+  blocked: { gif: 'clawd-error.gif', label: '被阻塞了', cls: 'blocked' },
+  done: { gif: 'clawd-happy.gif', label: '完成！', cls: 'vibing' },
+  idle: { gif: 'clawd-idle.gif', label: '空闲', cls: 'idle' },
+  sleep: { gif: 'clawd-sleeping.gif', label: '已下线', cls: 'idle' },
+  conducting: { gif: 'clawd-conducting.gif', label: '协调中', cls: 'vibing' },
+};
+
+const members = new Map();
+const feed = [];
+const MAX_FEED = 50;
+
+// WebSocket 连接
+const params = new URLSearchParams(window.location.search);
+const wsHost = params.get('server') || 'localhost:3456';
+const token = params.get('token') || '';
+let ws;
+
+function connect() {
+  const url = `ws://${wsHost}${token ? '?token=' + token : ''}`;
+  ws = new WebSocket(url);
+
+  ws.onopen = () => {
+    document.getElementById('connStatus').className = 'status-badge online';
+    document.getElementById('connStatus').querySelector('span').textContent = '已连接';
+    ws.send(JSON.stringify({ type: 'join', name: '🖥️ Dashboard' }));
+  };
+
+  ws.onclose = () => {
+    document.getElementById('connStatus').className = 'status-badge offline';
+    document.getElementById('connStatus').querySelector('span').textContent = '已断开';
+    setTimeout(connect, 3000);
+  };
+
+  ws.onmessage = (e) => {
+    try {
+      const msg = JSON.parse(e.data);
+      handleMessage(msg);
+    } catch {}
+  };
+}
+
+function handleMessage(msg) {
+  switch (msg.type) {
+    case 'members':
+      // 初始成员列表
+      break;
+    case 'catchup':
+      (msg.messages || []).forEach(m => handleMessage(m));
+      break;
+    case 'active_edits':
+      for (const [file, info] of Object.entries(msg.edits || {})) {
+        updateMember(info.editor, 'editing', file);
+      }
+      break;
+    case 'joined':
+      if (msg.name === '🖥️ Dashboard') break;
+      updateMember(msg.name, 'idle');
+      addFeed('join', `${msg.name} 上线了`, msg.ts);
+      break;
+    case 'left':
+      updateMember(msg.name, 'sleep');
+      addFeed('leave', `${msg.name} 下线了`, msg.ts);
+      break;
+    case 'editing':
+      updateMember(msg.name, 'editing', msg.file);
+      addFeed('editing', `${msg.name} → ${shortPath(msg.file)}`, msg.ts);
+      break;
+    case 'done_editing':
+      updateMember(msg.name, 'idle');
+      break;
+    case 'decision':
+      addFeed('decision', `${msg.name}: ${msg.what}`, msg.ts);
+      break;
+    case 'experience':
+      addFeed('experience', `💡 ${msg.name}: ${msg.content}`, msg.ts);
+      break;
+    case 'conflict':
+      addFeed('conflict', `⚠️ ${msg.other_editor} 和 ${msg.name || '?'} 同时编辑 ${shortPath(msg.file)}`, msg.ts);
+      break;
+    case 'board':
+      addFeed('board', `📋 ${msg.name} ${msg.action} #${msg.task?.id}: ${msg.task?.content || ''}`, msg.ts);
+      break;
+    case 'team_broadcast':
+      addFeed('decision', `📢 ${msg.name}: ${msg.content}`, msg.ts);
+      break;
+  }
+  renderMembers();
+}
+
+function updateMember(name, status, file) {
+  if (!name || name === '🖥️ Dashboard') return;
+  const m = members.get(name) || { name, status: 'idle', file: null };
+  m.status = status;
+  if (file !== undefined) m.file = file;
+  m.lastSeen = Date.now();
+  members.set(name, m);
+}
+
+function shortPath(p) {
+  if (!p) return '';
+  const parts = p.split('/');
+  return parts.length > 2 ? '...' + parts.slice(-2).join('/') : p;
+}
+
+function renderMembers() {
+  const grid = document.getElementById('teamGrid');
+  if (members.size === 0) return;
+
+  grid.innerHTML = '';
+  for (const [name, m] of members) {
+    const state = STATE_MAP[m.status] || STATE_MAP.idle;
+    const card = document.createElement('div');
+    card.className = `member-card ${state.cls}`;
+    card.innerHTML = `
+      <div class="member-avatar"><img src="assets/${state.gif}" alt="${m.status}"></div>
+      <div class="member-name">${name}</div>
+      <div class="member-status">${state.label}</div>
+      ${m.file ? `<div class="member-file">${shortPath(m.file)}</div>` : ''}
+    `;
+    grid.appendChild(card);
+  }
+}
+
+function addFeed(type, text, ts) {
+  feed.unshift({ type, text, ts: ts || new Date().toISOString() });
+  if (feed.length > MAX_FEED) feed.pop();
+  renderFeed();
+}
+
+function renderFeed() {
+  const el = document.getElementById('activityFeed');
+  el.innerHTML = feed.slice(0, 20).map(f => {
+    const time = f.ts ? new Date(f.ts).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }) : '';
+    return `<div class="feed-item ${f.type}"><span class="feed-time">${time}</span> ${f.text}</div>`;
+  }).join('');
+}
+
+// 定期轮询 /status 作为备份（WebSocket 可能 miss 消息）
+async function pollStatus() {
+  try {
+    const url = `http://${wsHost}/status${token ? '?token=' + token : ''}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    for (const [file, info] of Object.entries(data.active_edits || {})) {
+      updateMember(info.editor, 'editing', file);
+    }
+    // 将在线但无编辑的成员标记为 idle
+    for (const name of (data.members || [])) {
+      if (!members.has(name)) updateMember(name, 'idle');
+    }
+    renderMembers();
+  } catch {}
+}
+
+connect();
+setInterval(pollStatus, 10000);
+</script>
+</body>
+</html>

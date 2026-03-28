@@ -75,6 +75,27 @@ async function main() {
         await crossIde(process.cwd(), args);
         break;
       }
+      case 'dashboard': {
+        const { createServer } = await import('http');
+        const { readFileSync: rf, existsSync: ex } = await import('fs');
+        const { join: j, extname } = await import('path');
+        const dashDir = resolve(ROOT, 'dashboard');
+        const port = parseInt(args[0] || '3457');
+        const mime = { '.html': 'text/html', '.gif': 'image/gif', '.css': 'text/css', '.js': 'text/javascript', '.png': 'image/png', '.svg': 'image/svg+xml' };
+        const srv = createServer((req, res) => {
+          const p = j(dashDir, req.url === '/' ? 'index.html' : req.url);
+          if (!ex(p)) { res.writeHead(404); res.end('Not found'); return; }
+          res.writeHead(200, { 'Content-Type': mime[extname(p)] || 'application/octet-stream' });
+          res.end(rf(p));
+        });
+        srv.listen(port, () => {
+          console.log(`\n  🎵 covibe Dashboard 已启动!\n`);
+          console.log(`  📺 打开浏览器: http://localhost:${port}?server=localhost:3456`);
+          console.log(`  💡 如果 sync server 在其他机器: http://localhost:${port}?server=192.168.x.x:3456`);
+          console.log(`\n  Ctrl+C 退出\n`);
+        });
+        break;
+      }
       case 'team': {
         const subCmd = args[0];
         const { team } = await import(resolve(ROOT, 'lib/team.mjs'));
