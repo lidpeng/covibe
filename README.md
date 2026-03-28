@@ -45,7 +45,7 @@ cd your-project
 covibe init           # 自动探测技术栈 → 一键生成完整 AI 工作环境
 covibe audit          # 审计你的 AI 工作环境健康度（100 分制）
 covibe team init      # 开启团队协作模式
-covibe sync start     # 启动实时同步（内网 P2P）
+covibe sync start     # 启动实时同步（局域网 P2P）
 ```
 
 ---
@@ -215,7 +215,7 @@ covibe sync status
 ### 连接架构
 
 ```
-内网 (192.168.x.x)
+局域网 (192.168.x.x)
 ┌──────────┐     WebSocket      ┌──────────┐
 │ Alice     │◄──────────────────►│ Sync     │
 │ + AI      │                    │ Server   │
@@ -234,7 +234,7 @@ covibe sync status
 | 层面 | 措施 |
 |------|------|
 | **代码不经过 server** | sync 只传文件路径和决策摘要，代码通过 Git 管理 |
-| **纯内网** | 服务器监听 0.0.0.0 但只在内网使用 |
+| **局域网** | 服务器监听 0.0.0.0 但只在局域网使用 |
 | **无持久存储** | 服务端内存中只保留最近 100 条消息，重启即清空 |
 | **项目隔离** | `--project` 参数隔离不同项目的消息 |
 | **本地日志** | sync.jsonl 只写在本地 `.teamwork/live/`，gitignored |
