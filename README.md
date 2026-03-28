@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/logo.png" width="200" alt="covibe logo"></p>
+
 # covibe
 
 > **Co-Vibe — 多人 Vibe Coding 协作工具链**
