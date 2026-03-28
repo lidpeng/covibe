@@ -262,6 +262,12 @@ function handleMessage(socket, raw) {
 
 // ── HTTP + WebSocket 服务器 ──
 const server = createServer((req, res) => {
+  // CORS 支持（Dashboard 和 API 在不同端口）
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Covibe-Token');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
+
   // Token 校验中间件
   if (TOKEN) {
     const authHeader = req.headers['x-covibe-token'] || new URL(req.url, `http://localhost:${PORT}`).searchParams.get('token');
@@ -299,7 +305,26 @@ const server = createServer((req, res) => {
     req.on('end', () => {
       try {
         const msg = JSON.parse(body);
-        broadcastAll({ ...msg, ts: new Date().toISOString(), source: 'http' });
+        const ts = new Date().toISOString();
+        const full = { ...msg, ts, source: 'http' };
+        // 更新服务端状态（和 WS handleMessage 同步）
+        if (msg.type === 'editing' && msg.name && msg.file) {
+          activeEdits.set(msg.file, { editor: msg.name, since: ts });
+        }
+        if (msg.type === 'done_editing' && msg.file) {
+          activeEdits.delete(msg.file);
+        }
+        if (msg.type === 'joined' && msg.name) {
+          // 用 null socket 占位，表示通过 HTTP 广播的虚拟成员
+          if (![...clients.values()].find(c => c.name === msg.name)) {
+            clients.set({ _http: msg.name }, { name: msg.name, joinedAt: ts });
+          }
+        }
+        if (msg.type === 'left' && msg.name) {
+          for (const [s, c] of clients) { if (c.name === msg.name) { clients.delete(s); break; } }
+          for (const [f, e] of activeEdits) { if (e.editor === msg.name) activeEdits.delete(f); }
+        }
+        broadcastAll(full);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ ok: true }));
       } catch {

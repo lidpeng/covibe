@@ -83,7 +83,8 @@ async function main() {
         const port = parseInt(args[0] || '3457');
         const mime = { '.html': 'text/html', '.gif': 'image/gif', '.css': 'text/css', '.js': 'text/javascript', '.png': 'image/png', '.svg': 'image/svg+xml' };
         const srv = createServer((req, res) => {
-          const p = j(dashDir, req.url === '/' ? 'index.html' : req.url);
+          const pathname = new URL(req.url, `http://localhost:${port}`).pathname;
+          const p = j(dashDir, pathname === '/' ? 'index.html' : pathname);
           if (!ex(p)) { res.writeHead(404); res.end('Not found'); return; }
           res.writeHead(200, { 'Content-Type': mime[extname(p)] || 'application/octet-stream' });
           res.end(rf(p));

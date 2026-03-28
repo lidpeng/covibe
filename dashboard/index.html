@@ -316,7 +316,10 @@ async function pollStatus() {
 }
 
 connect();
-setInterval(pollStatus, 10000);
+// 立即轮询一次 + 每 5 秒轮询（WebSocket 可能连不上）
+setTimeout(pollStatus, 1000);
+setTimeout(pollStatus, 3000);
+setInterval(pollStatus, 5000);
 </script>
 </body>
 </html>
