@@ -2,6 +2,8 @@
 
 > **Co-Vibe — 多人 Vibe Coding 协作工具链**
 
+🌐 [English](README.en.md)
+
 [![npm version](https://img.shields.io/npm/v/covibe.svg)](https://www.npmjs.com/package/covibe)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
