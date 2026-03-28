@@ -18,38 +18,37 @@ body.light .sidebar { background:#fff; }
 body.light .feed-item,.kanban-card,.exp-card { background:rgba(0,0,0,0.02); }
 
 /* Layout */
-.app { display:flex; min-height:100vh; }
+.app { min-height:100vh; }
 
-/* Sidebar - narrow */
-.sidebar { width:56px; background:#12121a; border-right:1px solid var(--card-border); position:fixed; top:0; left:0; bottom:0; display:flex; flex-direction:column; align-items:center; z-index:100; padding:12px 0; }
-.sidebar .logo { font-size:24px; cursor:pointer; margin-bottom:16px; }
-.sidebar .nav-btn { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:18px; cursor:pointer; margin-bottom:6px; transition:all .2s; position:relative; }
-.sidebar .nav-btn:hover { background:rgba(255,255,255,0.08); }
-.sidebar .nav-btn.active { background:var(--accent); }
-.sidebar .nav-btn .tooltip { display:none; position:absolute; left:52px; background:var(--card-bg); border:1px solid var(--card-border); padding:4px 10px; border-radius:6px; font-size:11px; white-space:nowrap; z-index:200; }
-.sidebar .nav-btn:hover .tooltip { display:block; }
-.sidebar-bottom { margin-top:auto; display:flex; flex-direction:column; align-items:center; gap:8px; }
-.sidebar .conn-dot { width:10px; height:10px; border-radius:50%; }
-.sidebar .conn-dot.on { background:var(--green); animation:pulse 2s infinite; }
-.sidebar .conn-dot.off { background:var(--red); animation:pulse 2s infinite; }
+/* Top bar */
+.topbar { display:flex; align-items:center; justify-content:space-between; padding:10px 20px; border-bottom:1px solid var(--card-border); background:var(--card-bg); position:sticky; top:0; z-index:100; }
+.topbar-left { display:flex; align-items:center; gap:12px; }
+.topbar-logo { font-size:18px; font-weight:700; background:linear-gradient(135deg,#7c5bf5,#60a5fa); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.topbar-stat { font-size:11px; color:var(--text-dim); }
+.topbar-stat b { color:var(--text); }
+.topbar-right { display:flex; align-items:center; gap:10px; }
+.conn-dot { width:8px; height:8px; border-radius:50%; display:inline-block; }
+.conn-dot.on { background:var(--green); animation:pulse 2s infinite; }
+.conn-dot.off { background:var(--red); animation:pulse 2s infinite; }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
-.theme-btn { width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:16px; cursor:pointer; transition:all .2s; }
-.theme-btn:hover { background:rgba(255,255,255,0.08); }
+.conn-label { font-size:10px; color:var(--text-dim); }
+.theme-btn { width:28px; height:28px; border-radius:6px; border:1px solid var(--card-border); display:flex; align-items:center; justify-content:center; font-size:14px; cursor:pointer; transition:all .2s; background:transparent; }
+.theme-btn:hover { background:rgba(255,255,255,0.08); border-color:var(--accent); }
 
 /* Main content */
-.main { margin-left:56px; flex:1; padding:16px; display:grid; grid-template-rows:auto 1fr; gap:12px; height:100vh; overflow:hidden; }
+.main { padding:14px 20px; display:grid; grid-template-rows:auto 1fr; gap:12px; height:calc(100vh - 52px); overflow:hidden; }
 
-/* Top: Team bar */
-.team-bar { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
-.team-bar .title { font-size:13px; font-weight:600; color:var(--text-dim); margin-right:8px; white-space:nowrap; }
-.member-chip { background:var(--card-bg); border:1px solid var(--card-border); border-radius:10px; padding:6px 10px; display:flex; align-items:center; gap:8px; transition:all .2s; cursor:pointer; }
+/* Top: Team bar - HORIZONTAL */
+.team-bar { display:flex; gap:8px; align-items:center; overflow-x:auto; padding-bottom:2px; }
+.team-bar .title { font-size:12px; font-weight:600; color:var(--text-dim); margin-right:4px; white-space:nowrap; flex-shrink:0; }
+.member-chip { background:var(--card-bg); border:1px solid var(--card-border); border-radius:10px; padding:5px 10px 5px 6px; display:flex; align-items:center; gap:6px; transition:all .2s; cursor:pointer; flex-shrink:0; white-space:nowrap; }
 .member-chip:hover { border-color:var(--accent); transform:translateY(-1px); }
 .member-chip.vibing { border-color:var(--green); }
 .member-chip.blocked { border-color:var(--red); }
-.member-chip img { width:32px; height:32px; image-rendering:pixelated; }
+.member-chip img { width:28px; height:28px; image-rendering:pixelated; }
 .member-chip .name { font-size:11px; font-weight:600; }
 .member-chip .sub { font-size:9px; color:var(--text-dim); }
-.member-chip .file-tag { font-size:8px; color:var(--accent); background:rgba(124,91,245,0.1); padding:1px 5px; border-radius:3px; max-width:110px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:block; }
+.member-chip .file-tag { font-size:8px; color:var(--accent); background:rgba(124,91,245,0.1); padding:1px 5px; border-radius:3px; max-width:100px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:block; }
 
 /* Bottom: panels grid */
 .panels { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; overflow:hidden; }
@@ -120,23 +119,23 @@ body.light .feed-item,.kanban-card,.exp-card { background:rgba(0,0,0,0.02); }
 <body>
 <div class="app">
 
-<!-- Sidebar -->
-<nav class="sidebar">
-  <div class="logo">🎵</div>
-  <div class="nav-btn active" onclick="scrollTo(0,0)"><span>🏠</span><span class="tooltip">概览</span></div>
-  <div class="sidebar-bottom">
-    <div id="connDot" class="conn-dot off" title="未连接"></div>
-    <div class="theme-btn" onclick="toggleTheme()" title="切换主题">🌗</div>
+<!-- Top bar -->
+<div class="topbar">
+  <div class="topbar-left">
+    <span class="topbar-logo">🎵 covibe</span>
+    <span class="topbar-stat" id="teamTitle">等待成员上线...</span>
   </div>
-</nav>
+  <div class="topbar-right">
+    <span id="connDot" class="conn-dot off"></span>
+    <span class="conn-label" id="connLabel">连接中</span>
+    <button class="theme-btn" onclick="toggleTheme()" title="切换主题">🌗</button>
+  </div>
+</div>
 
 <!-- Main -->
 <div class="main">
-  <!-- Team bar -->
-  <div class="team-bar">
-    <span class="title" id="teamTitle">🎵 等待成员上线...</span>
-    <div id="teamChips"></div>
-  </div>
+  <!-- Team bar - horizontal -->
+  <div class="team-bar" id="teamChips"></div>
 
   <!-- Panels grid -->
   <div class="panels">
@@ -237,19 +236,17 @@ function render(){
   // Team chips
   const chips=document.getElementById('teamChips');
   const title=document.getElementById('teamTitle');
-  if(members.size===0){title.textContent='🎵 等待成员上线...';chips.innerHTML='';return;}
+  if(members.size===0){title.textContent='等待成员上线...';chips.innerHTML='';return;}
   const onlineCount=[...members.values()].filter(m=>m.status!=='sleep').length;
   const editCount=[...members.values()].filter(m=>m.status==='editing').length;
   title.textContent=`👥 ${onlineCount} 在线 · 📝 ${editCount} 编辑中`;
-  chips.innerHTML='';
+  // 横排渲染成员
+  let html='';
   for(const[name,m]of members){
     const s=STATE_MAP[m.status]||STATE_MAP.idle;
-    const chip=document.createElement('div');
-    chip.className=`member-chip ${s.cls}`;
-    chip.onclick=()=>showMember(name);
-    chip.innerHTML=`<img src="assets/${s.gif}"><div><div class="name">${name}</div><div class="sub">${s.label}</div>${m.file?`<div class="file-tag">${shortPath(m.file)}</div>`:''}</div>`;
-    chips.appendChild(chip);
+    html+=`<div class="member-chip ${s.cls}" onclick="showMember('${name}')"><img src="assets/${s.gif}"><div><div class="name">${name}</div><div class="sub">${s.label}</div>${m.file?`<div class="file-tag">${shortPath(m.file)}</div>`:''}</div></div>`;
   }
+  chips.innerHTML=html;
 
   // Feed
   document.getElementById('feedCount').textContent=feed.length;
@@ -328,8 +325,8 @@ if(localStorage.getItem('covibe-theme')==='light')document.body.classList.add('l
 function connect(){
   try{
     ws=new WebSocket(`ws://${wsHost}${token?'?token='+token:''}`);
-    ws.onopen=()=>{document.getElementById('connDot').className='conn-dot on';document.getElementById('connDot').title='已连接';ws.send(JSON.stringify({type:'join',name:'🖥️ Dashboard'}));};
-    ws.onclose=()=>{document.getElementById('connDot').className='conn-dot off';document.getElementById('connDot').title='已断开';setTimeout(connect,3000);};
+    ws.onopen=()=>{document.getElementById('connDot').className='conn-dot on';document.getElementById('connLabel').textContent='已连接';ws.send(JSON.stringify({type:'join',name:'🖥️ Dashboard'}));};
+    ws.onclose=()=>{document.getElementById('connDot').className='conn-dot off';document.getElementById('connLabel').textContent='已断开';setTimeout(connect,3000);};
     ws.onmessage=e=>{try{handleMessage(JSON.parse(e.data));}catch{}};
   }catch{setTimeout(connect,3000);}
 }
