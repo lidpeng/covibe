@@ -89,10 +89,15 @@ async function main() {
           res.writeHead(200, { 'Content-Type': mime[extname(p)] || 'application/octet-stream' });
           res.end(rf(p));
         });
+        const syncUser = process.env.HARNESS_SYNC_USER || '';
+        const syncServer = process.env.HARNESS_SYNC_SERVER ? new URL(process.env.HARNESS_SYNC_SERVER).host : 'localhost:3456';
+        const syncToken = process.env.HARNESS_SYNC_TOKEN || '';
+        const qs = `server=${syncServer}${syncUser ? '&name=' + encodeURIComponent(syncUser) : ''}${syncToken ? '&token=' + encodeURIComponent(syncToken) : ''}`;
         srv.listen(port, () => {
           console.log(`\n  🎵 covibe Dashboard 已启动!\n`);
-          console.log(`  📺 打开浏览器: http://localhost:${port}?server=localhost:3456`);
-          console.log(`  💡 如果 sync server 在其他机器: http://localhost:${port}?server=192.168.x.x:3456`);
+          console.log(`  📺 打开浏览器: http://localhost:${port}?${qs}`);
+          if (syncUser) console.log(`  👤 当前身份: ${syncUser}`);
+          else console.log(`  💡 设置身份: export HARNESS_SYNC_USER="你的名字"`);
           console.log(`\n  Ctrl+C 退出\n`);
         });
         break;
