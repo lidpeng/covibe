@@ -4,10 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>covibe — 一起 Vibe Coding</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#f8f8fc;--surface:#fff;--border:#e4e4ee;--text:#1a1a2e;--dim:#666;--accent:#7c5bf5;--accent2:#4f6df5;--green:#16a34a;--yellow:#ca8a04;--red:#dc2626}
-body{font-family:'SF Mono','JetBrains Mono','Fira Code',monospace;background:var(--bg);color:var(--text);overflow-x:hidden}
+body{font-family:'Inter','Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden}
+code,.code-block,.install-cmd code{font-family:'JetBrains Mono','Fira Code','SF Mono',monospace}
 body.dark{--bg:#0a0a0f;--surface:#12121a;--border:#1e1e2e;--text:#e8e8ef;--dim:#888;--accent:#7c5bf5;--accent2:#60a5fa;--green:#4ade80;--yellow:#facc15;--red:#f87171}
 a{color:var(--accent2);text-decoration:none}
 a:hover{text-decoration:underline}
@@ -88,6 +92,10 @@ footer{border-top:1px solid var(--border);padding:40px 20px;text-align:center}
 footer p{font-size:12px;color:var(--dim);line-height:2}
 footer a{color:var(--accent)}
 
+/* Screenshot */
+.screenshot-img{max-width:100%;border-radius:16px;border:1px solid var(--border);box-shadow:0 8px 32px rgba(0,0,0,0.12);cursor:zoom-in;transition:transform .4s cubic-bezier(.25,.46,.45,.94),box-shadow .4s ease}
+.screenshot-img.zoomed{transform:scale(1.5);box-shadow:0 20px 60px rgba(0,0,0,0.25);cursor:zoom-out;position:relative;z-index:100}
+
 /* Responsive */
 @media(max-width:768px){
   .compare{grid-template-columns:1fr}
@@ -162,6 +170,10 @@ footer a{color:var(--accent)}
       <p>每个团队成员用一个像素小人表示实时状态。正在编辑、思考、完成、阻塞 — 一目了然。<br><br>
       <code>covibe dashboard</code> 启动 → 浏览器打开即看。</p>
     </div>
+  </div>
+  <div class="screenshot-wrapper" style="margin-top:32px;text-align:center">
+    <img src="main_page.png" alt="covibe Dashboard 首页截图" class="screenshot-img" onclick="this.classList.toggle('zoomed')" title="点击放大查看">
+    <p style="font-size:12px;color:var(--dim);margin-top:10px">点击图片可放大查看</p>
   </div>
 </section>
 
