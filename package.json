@@ -4,7 +4,7 @@
   "description": "Co-Vibe — 多人 Vibe Coding 协作工具链。自动探测、团队协作、共享经验板、Agent 智能分工、实时同步。",
   "type": "module",
   "bin": {
-    "covibe": "./bin/harness.mjs"
+    "covibe": "./bin/covibe.mjs"
   },
   "files": [
     "bin/",
