@@ -14,6 +14,7 @@ SYNC_USER="${HARNESS_SYNC_USER:-$(whoami)}"
 SYNC_TOKEN="${HARNESS_SYNC_TOKEN:-}"
 ACTION="${1:-status}"
 FILE_PATH="${2:-}"
+SYNC_DEBUG="${SYNC_DEBUG:-0}"
 
 # Token header（如果设置了 token）
 TOKEN_HEADER=""
@@ -23,11 +24,19 @@ fi
 
 case "$ACTION" in
   editing)
-    curl -s -X POST "$SYNC_SERVER/broadcast" \
-      -H "Content-Type: application/json" \
-      -H "X-Covibe-Token: $SYNC_TOKEN" \
-      -d "{\"type\":\"editing\",\"name\":\"$SYNC_USER\",\"file\":\"$FILE_PATH\"}" \
-      > /dev/null 2>&1 || true
+    if [ "$SYNC_DEBUG" = "1" ]; then
+      curl -s -X POST "$SYNC_SERVER/broadcast" \
+        -H "Content-Type: application/json" \
+        -H "X-Covibe-Token: $SYNC_TOKEN" \
+        -d "{\"type\":\"editing\",\"name\":\"$SYNC_USER\",\"file\":\"$FILE_PATH\"}" \
+        || echo "[sync-hook] warning: failed to broadcast editing status" >&2
+    else
+      curl -s -X POST "$SYNC_SERVER/broadcast" \
+        -H "Content-Type: application/json" \
+        -H "X-Covibe-Token: $SYNC_TOKEN" \
+        -d "{\"type\":\"editing\",\"name\":\"$SYNC_USER\",\"file\":\"$FILE_PATH\"}" \
+        > /dev/null 2>&1 || echo "[sync-hook] warning: failed to broadcast editing status" >&2
+    fi
     ;;
 
   check)
@@ -45,21 +54,37 @@ case "$ACTION" in
   decision)
     WHAT="${3:-}"
     WHY="${4:-}"
-    curl -s -X POST "$SYNC_SERVER/broadcast" \
-      -H "Content-Type: application/json" \
-      -H "X-Covibe-Token: $SYNC_TOKEN" \
-      -d "{\"type\":\"decision\",\"name\":\"$SYNC_USER\",\"what\":\"$WHAT\",\"why\":\"$WHY\",\"decision_type\":\"human\"}" \
-      > /dev/null 2>&1 || true
+    if [ "$SYNC_DEBUG" = "1" ]; then
+      curl -s -X POST "$SYNC_SERVER/broadcast" \
+        -H "Content-Type: application/json" \
+        -H "X-Covibe-Token: $SYNC_TOKEN" \
+        -d "{\"type\":\"decision\",\"name\":\"$SYNC_USER\",\"what\":\"$WHAT\",\"why\":\"$WHY\",\"decision_type\":\"human\"}" \
+        || echo "[sync-hook] warning: failed to broadcast decision" >&2
+    else
+      curl -s -X POST "$SYNC_SERVER/broadcast" \
+        -H "Content-Type: application/json" \
+        -H "X-Covibe-Token: $SYNC_TOKEN" \
+        -d "{\"type\":\"decision\",\"name\":\"$SYNC_USER\",\"what\":\"$WHAT\",\"why\":\"$WHY\",\"decision_type\":\"human\"}" \
+        > /dev/null 2>&1 || echo "[sync-hook] warning: failed to broadcast decision" >&2
+    fi
     ;;
 
   experience)
     CONTENT="${3:-}"
     CATEGORY="${4:-general}"
-    curl -s -X POST "$SYNC_SERVER/broadcast" \
-      -H "Content-Type: application/json" \
-      -H "X-Covibe-Token: $SYNC_TOKEN" \
-      -d "{\"type\":\"experience\",\"name\":\"$SYNC_USER\",\"content\":\"$CONTENT\",\"category\":\"$CATEGORY\"}" \
-      > /dev/null 2>&1 || true
+    if [ "$SYNC_DEBUG" = "1" ]; then
+      curl -s -X POST "$SYNC_SERVER/broadcast" \
+        -H "Content-Type: application/json" \
+        -H "X-Covibe-Token: $SYNC_TOKEN" \
+        -d "{\"type\":\"experience\",\"name\":\"$SYNC_USER\",\"content\":\"$CONTENT\",\"category\":\"$CATEGORY\"}" \
+        || echo "[sync-hook] warning: failed to broadcast experience" >&2
+    else
+      curl -s -X POST "$SYNC_SERVER/broadcast" \
+        -H "Content-Type: application/json" \
+        -H "X-Covibe-Token: $SYNC_TOKEN" \
+        -d "{\"type\":\"experience\",\"name\":\"$SYNC_USER\",\"content\":\"$CONTENT\",\"category\":\"$CATEGORY\"}" \
+        > /dev/null 2>&1 || echo "[sync-hook] warning: failed to broadcast experience" >&2
+    fi
     ;;
 
   status)
@@ -76,10 +101,18 @@ case "$ACTION" in
     ;;
 
   leave)
-    curl -s -X POST "$SYNC_SERVER/broadcast" \
-      -H "Content-Type: application/json" \
-      -H "X-Covibe-Token: $SYNC_TOKEN" \
-      -d "{\"type\":\"left\",\"name\":\"$SYNC_USER\"}" \
-      > /dev/null 2>&1 || true
+    if [ "$SYNC_DEBUG" = "1" ]; then
+      curl -s -X POST "$SYNC_SERVER/broadcast" \
+        -H "Content-Type: application/json" \
+        -H "X-Covibe-Token: $SYNC_TOKEN" \
+        -d "{\"type\":\"left\",\"name\":\"$SYNC_USER\"}" \
+        || echo "[sync-hook] warning: failed to broadcast leave" >&2
+    else
+      curl -s -X POST "$SYNC_SERVER/broadcast" \
+        -H "Content-Type: application/json" \
+        -H "X-Covibe-Token: $SYNC_TOKEN" \
+        -d "{\"type\":\"left\",\"name\":\"$SYNC_USER\"}" \
+        > /dev/null 2>&1 || echo "[sync-hook] warning: failed to broadcast leave" >&2
+    fi
     ;;
 esac
