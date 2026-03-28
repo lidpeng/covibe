@@ -1,4 +1,4 @@
-<p align="center"><img src="docs/logo.png" width="200" alt="covibe logo"></p>
+<p align="center"><img src="docs/logo.png" width="800" alt="covibe logo"></p>
 
 # covibe
 
