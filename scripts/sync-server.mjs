@@ -349,8 +349,18 @@ const PING_TIMER = setInterval(() => {
     ws.ping();
   });
 
-  // HTTP virtual members: expire after TTL (Claude Code posts intermittently)
+  // Auto-clear stale edits (no update for 60s = editing done)
   const now = Date.now();
+  const EDIT_TTL_MS = 60 * 1000;
+  for (const [file, edit] of activeEdits) {
+    const editAge = now - new Date(edit.since).getTime();
+    if (editAge > EDIT_TTL_MS) {
+      activeEdits.delete(file);
+      broadcastAll({ type: 'done_editing', name: edit.editor, file, ts: new Date().toISOString() });
+    }
+  }
+
+  // HTTP virtual members: expire after TTL (Claude Code posts intermittently)
   for (const [name, info] of httpMembers) {
     if ((now - info.lastActivity) > HTTP_MEMBER_TTL_MS) {
       httpMembers.delete(name);
