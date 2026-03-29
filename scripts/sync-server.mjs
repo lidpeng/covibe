@@ -249,8 +249,38 @@ const server = createServer((req, res) => {
     return;
   }
 
+  // Claude Code hook endpoint: transforms hook input into editing broadcast
+  if (req.method === 'POST' && pathname === '/hook') {
+    let body = '';
+    req.on('data', chunk => { body += chunk; });
+    req.on('end', () => {
+      try {
+        const hook = JSON.parse(body);
+        const file = hook?.tool_input?.file_path || hook?.tool_response?.filePath || '';
+        const name = process.env.HARNESS_SYNC_USER || 'unknown';
+        if (file) {
+          const ts = new Date().toISOString();
+          activeEdits.set(file, { editor: name, since: ts });
+          if (!memberNames.has(name)) {
+            httpMembers.set(name, { joinedAt: ts, lastActivity: Date.now() });
+            memberNames.add(name);
+          } else if (httpMembers.has(name)) {
+            httpMembers.get(name).lastActivity = Date.now();
+          }
+          broadcastAll({ type: 'editing', name, file, ts });
+        }
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: true }));
+      } catch {
+        res.writeHead(400);
+        res.end('Invalid JSON');
+      }
+    });
+    return;
+  }
+
   res.writeHead(200, { 'Content-Type': 'text/plain' });
-  res.end(`Harness Sync Server | Project: ${PROJECT} | Online: ${clients.size}\nWS: ws://localhost:${PORT}\nAPI: GET /status, GET /since?ts=, POST /broadcast`);
+  res.end(`Harness Sync Server | Project: ${PROJECT} | Online: ${clients.size}\nWS: ws://localhost:${PORT}\nAPI: GET /status, GET /since?ts=, POST /broadcast, POST /hook`);
 });
 
 // ── WebSocket 服务器（ws 库）──
