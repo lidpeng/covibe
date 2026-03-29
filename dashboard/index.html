@@ -530,7 +530,7 @@ function openMeEdit(){
   setTimeout(()=>inp.focus(),100);
 }
 function closeMeEdit(){document.getElementById('meEditOverlay').classList.remove('show');}
-function pickMe(name){myName=name;localStorage.setItem('covibe-myname',myName);updateMeUI();closeMeEdit();toast(`身份已设为「${myName}」`);render();}
+function pickMe(name){myName=name;localStorage.setItem('covibe-myname',myName);updateMeUI();closeMeEdit();toast(`身份已设为「${myName}」`);render();if(ws&&ws.readyState===1)ws.send(JSON.stringify({type:'join',name:myName}));else connect();}
 function saveMeEdit(){const v=document.getElementById('meEditInput').value.trim();if(!v)return;pickMe(v);}
 // Auto-prompt if no name set (and not from env via URL)
 function checkIdentity(){if(!myName)setTimeout(openMeEdit,800);}
@@ -559,7 +559,7 @@ function renderBoard(){const g={todo:[],vibing:[],blocked:[],done:[]};for(const 
 if(!boardTasks.length)h='<div class="empty">点击「+ 添加」创建任务</div>';document.getElementById('boardBody').innerHTML=h;document.getElementById('boardCount').textContent=boardTasks.length;}
 
 /* ══ EXPERIENCE ══ */
-function addExp(){const c=document.getElementById('expInput').value.trim(),cat=document.getElementById('expCat').value;if(!c)return;expId++;const e={id:expId,content:c,category:cat,author:myName,votes:0,voters:[],ts:new Date().toISOString()};experiences.unshift(e);document.getElementById('expInput').value='';toggleForm('expForm');broadcast({type:'experience',name:myName,content:c,category:cat,expId:e.id});toast('经验已记录');}
+function addExp(){const c=document.getElementById('expInput').value.trim(),cat=document.getElementById('expCat').value;if(!c)return;expId++;const e={id:expId,content:c,category:cat,author:myName,votes:0,voters:[],ts:new Date().toISOString()};experiences.unshift(e);document.getElementById('expInput').value='';toggleForm('expForm');broadcast({type:'experience',name:myName,content:c,category:cat,expId:e.id});toast('经验已���录');}
 function voteExp(id){const e=experiences.find(x=>x.id===id);if(!e)return;if(e.voters.includes(myName)){e.voters=e.voters.filter(v=>v!==myName);e.votes--;}else{e.voters.push(myName);e.votes++;}renderExp();}
 function delExp(id){const i=experiences.findIndex(x=>x.id===id);if(i>=0)experiences.splice(i,1);renderExp();}
 const CAT_LABEL={general:'通用',performance:'性能',security:'安全',bugfix:'踩坑','best-practice':'最佳实践',tooling:'工具'};
@@ -659,7 +659,7 @@ function render(){
   renderBoard();renderChat();renderExp();renderDec();renderBlockers();renderSprint();renderContrib();
 }
 
-/* ══ MEMBER MODAL ══ */
+/* ══ MEMBER MODAL ═��� */
 function showMember(n){const m=members.get(n);if(!m)return;const s=STATE_MAP[m.status]||STATE_MAP.idle;const recent=feed.filter(f=>f.text.includes(n)).slice(0,5);const badges=getBadges(n);
 document.getElementById('modalContent').innerHTML=`<img src="assets/${s.gif}"><div class="name">${n}</div><div class="role">${s.label}${m.file?' · '+m.file:''}</div><div class="modal-stats"><div class="modal-stat"><div class="val">${m.edits||0}</div><div class="lbl">编辑次数</div></div><div class="modal-stat"><div class="val">${boardTasks.filter(t=>t.assignee===n&&t.status==='done').length}</div><div class="lbl">完成任务</div></div></div><div class="badge-row">${Object.entries(BADGES).map(([k,v])=>`<span class="badge ${badges.includes(k)?'earned':'locked'}">${v.i} ${v.l}</span>`).join('')}</div>${recent.length?'<div style="text-align:left;margin-top:12px;">'+recent.map(f=>`<div class="feed-item ${f.type}" style="margin-top:4px"><span class="feed-time">${new Date(f.ts).toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'})}</span>${f.text}</div>`).join('')+'</div>':''}`;
 document.getElementById('memberModal').classList.add('show');}
@@ -692,7 +692,7 @@ function toggleTheme(){document.body.classList.toggle('light');localStorage.setI
 if(localStorage.getItem('covibe-theme')==='light')document.body.classList.add('light');
 
 /* ══ WEBSOCKET ══ */
-function connect(){try{ws=new WebSocket(`ws://${wsHost}${token?'?token='+token:''}`);ws.onopen=()=>{document.getElementById('connDot').className='conn-dot on';document.getElementById('connLabel').textContent='已连接';ws.send(JSON.stringify({type:'join',name:'\u{1F5A5}\uFE0F Dashboard'}));};ws.onclose=()=>{document.getElementById('connDot').className='conn-dot off';document.getElementById('connLabel').textContent='已断开';setTimeout(connect,3000);};ws.onmessage=e=>{try{handleMessage(JSON.parse(e.data));}catch{}};}catch{setTimeout(connect,3000);}}
+function connect(){try{ws=new WebSocket(`ws://${wsHost}${token?'?token='+token:''}`);ws.onopen=()=>{document.getElementById('connDot').className='conn-dot on';document.getElementById('connLabel').textContent='已连接';if(myName)ws.send(JSON.stringify({type:'join',name:myName}));};ws.onerror=(e)=>{console.error('WS error:',e);};ws.onclose=(e)=>{console.log('WS closed: code='+e.code+' reason='+e.reason);document.getElementById('connDot').className='conn-dot off';document.getElementById('connLabel').textContent='已断开';setTimeout(connect,3000);};ws.onmessage=e=>{try{handleMessage(JSON.parse(e.data));}catch{}};}catch{setTimeout(connect,3000);}}
 async function pollStatus(){try{const r=await fetch(`http://${wsHost}/status${token?'?token='+token:''}`);const d=await r.json();for(const[f,i]of Object.entries(d.active_edits||{}))updateMember(i.editor,'editing',f);for(const n of(d.members||[]))if(!members.has(n))updateMember(n,'idle');render();}catch{}try{const r=await fetch(`http://${wsHost}/since?ts=${new Date(Date.now()-60000).toISOString()}${token?'&token='+token:''}`);const d=await r.json();for(const m of(d.messages||[]))if(!feed.find(f=>f.ts===m.ts))handleMessage(m);}catch{}}
 
 /* ══ DEMO MOCK DATA ══ */
