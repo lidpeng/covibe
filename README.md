@@ -54,6 +54,137 @@ covibe sync start     # 启动实时同步（局域网 P2P）
 
 ---
 
+## 多人协作完整指南
+
+### 第一步：主机初始化（团队中任一人操作）
+
+```bash
+cd your-project
+
+# 1. 初始化 harness（自动探测技术栈 + 注册全局 sync hook）
+covibe init
+
+# 2. 初始化团队协作层（生成团队配置、成员画像、经验板）
+covibe team init
+
+# 3. 设置你的身份（持久化到 ~/.zshrc）
+echo 'export HARNESS_SYNC_USER="你的名字"' >> ~/.zshrc
+source ~/.zshrc
+
+# 4. 提交团队配置到 Git
+git add .claude/harness.team.json .teamwork/ scripts/setup-dev.sh .gitignore
+git commit -m "chore: 初始化 covibe 团队协作层"
+git push
+```
+
+### 第二步：启动协作服务（主机上运行）
+
+```bash
+# 启动 sync server（WebSocket 服务，后台常驻）
+covibe sync start &
+
+# 启动 Dashboard（可视化面板）
+covibe dashboard &
+
+# 查看你的内网 IP
+ifconfig | grep 'inet ' | grep -v 127.0.0.1
+```
+
+启动后你会看到：
+- **Sync Server**: `ws://0.0.0.0:3456`（WebSocket 持久连接）
+- **Dashboard**: `http://localhost:3457`（浏览器可视化面板）
+
+打开 Dashboard：
+
+```
+http://localhost:3457?server=localhost:3456&name=你的名字
+```
+
+### 第三步：队友加入
+
+队友需要完成以下步骤：
+
+```bash
+# 1. 安装 covibe
+npm install -g covibe
+
+# 2. 拉取最新代码（获取团队配置）
+git pull
+
+# 3. 初始化本地环境（自动注册全局 sync hook）
+covibe init
+
+# 4. 设置身份
+echo 'export HARNESS_SYNC_USER="队友名字"' >> ~/.zshrc
+source ~/.zshrc
+
+# 5. 新人引导（检查环境、了解项目）
+covibe team onboard
+
+# 6. 重启 Claude Code 会话（让 sync hook 生效）
+```
+
+队友打开 Dashboard 即可看到所有人状态：
+
+```
+http://主机IP:3457?server=主机IP:3456&name=队友名字
+```
+
+### 工作原理
+
+```
+┌─────────────────────────────────────────────────────┐
+│  Sync Server (:3456)                                │
+│  ┌───────────────────────────────────────────────┐  │
+│  │ WebSocket 持久连接（ws 库 ping/pong 保活）    │  │
+│  │ • Dashboard 浏览器 ←→ Server                  │  │
+│  │ • 连接保持到 tab 关闭，不会因空闲断开         │  │
+│  ├───────────────────────────────────────────────┤  │
+│  │ HTTP POST（Claude Code hook 上报）            │  │
+│  │ • 每次 Edit/Write → POST /broadcast           │  │
+│  │ • 编辑状态 60 秒无更新自动清除                │  │
+│  ├───────────────────────────────────────────────┤  │
+│  │ REST API                                      │  │
+│  │ • GET /status — 在线成员 + 编辑状态           │  │
+│  │ • GET /since?ts= — 增量消息                   │  │
+│  │ • POST /broadcast — 广播消息                  │  │
+│  └───────────────────────────────────────────────┘  │
+├─────────────────────────────────────────────────────┤
+│  Dashboard (:3457) — 静态页面 + WebSocket 客户端    │
+│  • 实时显示谁在线、谁在编辑哪个文件               │
+│  • 团队聊天、任务看板、经验板、决策记录           │
+│  • 身份保存在 localStorage，下次打开自动登录       │
+└─────────────────────────────────────────────────────┘
+
+┌──────────┐  PostToolUse Hook    ┌──────────┐
+│ Claude   │ ─── Edit/Write ───→  │ curl     │ ──→ POST /broadcast
+│ Code     │  (sync-edit-hook.sh) │          │     {"type":"editing",
+│          │                      └──────────┘      "name":"Dapeng",
+└──────────┘                                        "file":"src/App.tsx"}
+```
+
+### 常见问题
+
+**Q: Dashboard 显示"已断开"？**
+- 检查 sync server 是否在运行：`curl http://localhost:3456/status`
+- Cmd+Shift+R 强制刷新浏览器
+
+**Q: Claude Code 编辑文件但 Dashboard 显示空闲？**
+- Sync hook 需要在 `~/.claude/settings.json` 中注册
+- 运行 `covibe init` 会自动注册
+- 修改 settings.json 后需要**重启 Claude Code 会话**
+
+**Q: 队友连不上 sync server？**
+- 确认在同一局域网内
+- 检查防火墙是否开放 3456 和 3457 端口
+- 用 `curl http://主机IP:3456/status` 测试连通性
+
+**Q: 编辑状态一直不消失？**
+- 正常行为：60 秒无更新会自动清除
+- 如果持续编辑同一文件，状态会一直保持
+
+---
+
 ## 为什么需要 covibe
 
 ### 没有 covibe 的世界
@@ -281,11 +412,11 @@ covibe sync start --allow-ips "192.168.1.100,192.168.1.101"
 
 ---
 
-## 零依赖设计
+## 极简依赖设计
 
-- **CLI**: 纯 Node.js（>=18），零 npm 依赖
-- **Sync Server**: 自实现 WebSocket 协议，不需要 `ws` 包
-- **Hook 脚本**: 纯 bash + curl
+- **CLI**: Node.js（>=18），仅依赖 `ws` 一个包
+- **Sync Server**: `ws` 库处理 WebSocket 协议，兼容所有浏览器
+- **Hook 脚本**: 纯 bash + curl + jq
 - **数据格式**: JSON + Markdown，人可读、Git 可追踪
 - **存储**: 文件系统，不需要数据库
 
