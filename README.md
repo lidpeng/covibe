@@ -83,22 +83,20 @@ git push
 # 启动 sync server（WebSocket 服务，后台常驻）
 covibe sync start &
 
-# 启动 Dashboard（可视化面板）
+# 启动 Dashboard（自动读取 HARNESS_SYNC_USER）
 covibe dashboard &
 
 # 查看你的内网 IP
 ifconfig | grep 'inet ' | grep -v 127.0.0.1
 ```
 
-启动后你会看到：
-- **Sync Server**: `ws://0.0.0.0:3456`（WebSocket 持久连接）
-- **Dashboard**: `http://localhost:3457`（浏览器可视化面板）
-
-打开 Dashboard：
-
+启动后会打印完整 URL（已包含你的身份），直接点击打开即可：
 ```
-http://localhost:3457?server=localhost:3456&name=你的名字
+  📺 打开浏览器: http://localhost:3457?server=localhost:3456&name=你的名字
+  👤 当前身份: 你的名字
 ```
+
+身份首次通过 URL 设置后会保存在浏览器 localStorage，之后直接访问 `http://localhost:3457` 即可。
 
 ### 第三步：队友加入
 
@@ -124,11 +122,13 @@ covibe team onboard
 # 6. 重启 Claude Code 会话（让 sync hook 生效）
 ```
 
-队友打开 Dashboard 即可看到所有人状态：
+队友打开 Dashboard 即可看到所有人状态（首次需指定 server 为主机 IP）：
 
 ```
-http://主机IP:3457?server=主机IP:3456&name=队友名字
+http://主机IP:3457?server=主机IP:3456
 ```
+
+身份自动从 `HARNESS_SYNC_USER` 读取，无需在 URL 中重复指定。
 
 ### 工作原理
 
