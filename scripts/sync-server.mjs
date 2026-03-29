@@ -39,7 +39,8 @@ const httpMembers = new Map();
 const recentMessages = [];
 const MAX_RECENT = 100;
 const MAX_POST_BODY = 100 * 1024;
-const HEARTBEAT_TIMEOUT_MS = 2 * 60 * 1000;
+const PING_INTERVAL_MS = 30 * 1000;         // 30s ping to detect dead connections
+const HTTP_MEMBER_TTL_MS = 10 * 60 * 1000;  // 10min TTL for HTTP virtual members (Claude Code)
 
 // ── 日志 ──
 function logSync(msg) {
@@ -267,6 +268,10 @@ const wss = new WebSocketServer({
 });
 
 wss.on('connection', (ws, req) => {
+  ws.isAlive = true;
+
+  ws.on('pong', () => { ws.isAlive = true; });
+
   ws.on('message', (data) => {
     handleMessage(ws, data.toString());
   });
@@ -291,28 +296,33 @@ wss.on('connection', (ws, req) => {
   });
 });
 
-// ── 心跳超时清理 ──
-const HEARTBEAT_INTERVAL = setInterval(() => {
-  const now = Date.now();
-
-  for (const [ws, client] of clients) {
-    if (client.lastActivity && (now - client.lastActivity) > HEARTBEAT_TIMEOUT_MS) {
-      console.log(`\u23F0 ${client.name} timed out (idle > 2min)`);
-      for (const [file, edit] of activeEdits) {
-        if (edit.editor === client.name) activeEdits.delete(file);
+// ── 死连接检测（ping/pong）+ HTTP 成员 TTL ──
+const PING_TIMER = setInterval(() => {
+  // ws ping/pong: detect truly dead connections (network dropped without TCP close)
+  wss.clients.forEach(ws => {
+    if (ws.isAlive === false) {
+      const client = clients.get(ws);
+      if (client) {
+        console.log(`\u274C ${client.name} dead connection (no pong)`);
+        for (const [file, edit] of activeEdits) {
+          if (edit.editor === client.name) activeEdits.delete(file);
+        }
+        if (!httpMembers.has(client.name)) {
+          memberNames.delete(client.name);
+        }
+        broadcastAll({ type: 'left', name: client.name, ts: new Date().toISOString(), reason: 'dead' });
+        clients.delete(ws);
       }
-      if (!httpMembers.has(client.name)) {
-        memberNames.delete(client.name);
-      }
-      broadcastAll({ type: 'left', name: client.name, ts: new Date().toISOString(), reason: 'timeout' });
-      clients.delete(ws);
-      try { ws.close(); } catch {}
+      return ws.terminate();
     }
-  }
+    ws.isAlive = false;
+    ws.ping();
+  });
 
+  // HTTP virtual members: expire after TTL (Claude Code posts intermittently)
+  const now = Date.now();
   for (const [name, info] of httpMembers) {
-    if ((now - info.lastActivity) > HEARTBEAT_TIMEOUT_MS) {
-      console.log(`\u23F0 HTTP member ${name} expired (idle > 2min)`);
+    if ((now - info.lastActivity) > HTTP_MEMBER_TTL_MS) {
       httpMembers.delete(name);
       const hasWsClient = [...clients.values()].some(c => c.name === name);
       if (!hasWsClient) {
@@ -321,11 +331,11 @@ const HEARTBEAT_INTERVAL = setInterval(() => {
       for (const [file, edit] of activeEdits) {
         if (edit.editor === name) activeEdits.delete(file);
       }
-      broadcastAll({ type: 'left', name, ts: new Date().toISOString(), reason: 'timeout' });
+      broadcastAll({ type: 'left', name, ts: new Date().toISOString(), reason: 'expired' });
     }
   }
-}, 30_000);
-HEARTBEAT_INTERVAL.unref();
+}, PING_INTERVAL_MS);
+PING_TIMER.unref();
 
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`
