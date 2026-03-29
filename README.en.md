@@ -177,6 +177,9 @@ covibe dashboard
 | **Upvote** | `covibe experience upvote` | Upvote useful experiences |
 | **Auto-profile** | `covibe profile-gen` | Generate member profiles from git blame |
 | **AI coordination** | `covibe coordinate "task"` | AI-powered task assignment |
+| **Team suggestions** | `covibe suggest send <name> "advice"` | Send suggestions to teammates, recipient decides |
+| **View suggestions** | `covibe suggest inbox` | Check received suggestions |
+| **Accept/skip** | `covibe suggest accept/skip <id>` | Respond to suggestions |
 | **Cross-IDE** | `covibe cross-ide cursor/windsurf` | Generate rules for other IDEs |
 | **Dashboard** | `covibe dashboard` | Web UI with animated pixel characters |
 | **Templates** | `covibe template <type>` | 10 template types |

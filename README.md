@@ -210,7 +210,9 @@ covibe sync status
 | **查看经验** | `covibe experience list` | 按类别和标签过滤经验 |
 | **注入经验** | `covibe experience inject` | 为当前任务注入相关经验 |
 | **智能分工** | `covibe coordinate "任务"` | 基于成员画像 + git blame 推荐分工 |
-| **生成模板** | `covibe template <type>` | 10 种模板随时查阅 |
+| **团队建议** | `covibe suggest send <人> "建议"` | 给队友发建议，接收方自主决定是否采纳 |
+| **查看建议** | `covibe suggest inbox` | 查看收到的建议 |
+| **采纳/跳过** | `covibe suggest accept/skip <id>` | 响应建议 || **生成模板** | `covibe template <type>` | 10 种模板随时查阅 |
 
 ---
 
@@ -332,7 +334,7 @@ covibe 围绕三个核心轴构建 AI 的工作环境：
 | 6 | **决策保护** | 人工决策 / AI 建议分级保护 | sync server 决策广播 |
 | 7 | **共享经验板** | 零基建团队经验复用 | `covibe experience` |
 | 8 | **Agent 智能分工** | 画像 + git blame 匹配 | `covibe coordinate` |
-
+| 9 | **团队建议系统** | 发送自由，接收自主 | `covibe suggest` |
 ### 内置模板库
 
 covibe 内置 10 种 Harness Engineering 模板，随时查阅：
